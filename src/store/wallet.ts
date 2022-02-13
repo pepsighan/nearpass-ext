@@ -54,7 +54,7 @@ export function useInitializeWallet() {
         deps: { keyStore: new keyStores.BrowserLocalStorageKeyStore() },
       });
 
-      const wallet = new WalletConnection(near, null);
+      const wallet = new WalletConnection(near, 'nearpass');
       // Get the current logged in account id. If not authorized it is empty.
       const accountId = wallet.getAccountId();
       // Create an instance of the contract.
