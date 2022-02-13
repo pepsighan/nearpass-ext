@@ -1,3 +1,4 @@
+require('dotenv').config();
 const webpack = require('webpack'),
   path = require('path'),
   fileSystem = require('fs-extra'),
@@ -8,6 +9,10 @@ const webpack = require('webpack'),
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 const ASSET_PATH = process.env.ASSET_PATH || '/';
+
+if (!process.env.CONTRACT_NAME) {
+  throw new Error('CONTRACT_NAME is not defined');
+}
 
 const alias = {
   'react-dom': '@hot-loader/react-dom',
@@ -36,10 +41,10 @@ if (fileSystem.existsSync(secretsPath)) {
 const options = {
   mode: process.env.NODE_ENV || 'development',
   entry: {
-    options: path.join(__dirname, 'src', 'pages', 'Options', 'index.js'),
-    popup: path.join(__dirname, 'src', 'pages', 'Popup', 'index.js'),
-    background: path.join(__dirname, 'src', 'pages', 'Background', 'index.js'),
-    contentScript: path.join(__dirname, 'src', 'pages', 'Content', 'index.js'),
+    app: path.join(__dirname, 'src', 'pages', 'App', 'index.tsx'),
+    popup: path.join(__dirname, 'src', 'pages', 'Popup', 'index.tsx'),
+    background: path.join(__dirname, 'src', 'pages', 'Background', 'index.ts'),
+    contentScript: path.join(__dirname, 'src', 'pages', 'Content', 'index.ts'),
   },
   chromeExtensionBoilerplate: {
     notHotReload: ['background', 'contentScript', 'devtools'],
@@ -110,7 +115,7 @@ const options = {
     new CleanWebpackPlugin({ verbose: false }),
     new webpack.ProgressPlugin(),
     // expose and write the allowed env vars on the compiled bundle
-    new webpack.EnvironmentPlugin(['NODE_ENV']),
+    new webpack.EnvironmentPlugin(['NODE_ENV', 'CONTRACT_NAME']),
     new CopyWebpackPlugin({
       patterns: [
         {
@@ -158,16 +163,19 @@ const options = {
       ],
     }),
     new HtmlWebpackPlugin({
-      template: path.join(__dirname, 'src', 'pages', 'Options', 'index.html'),
-      filename: 'options.html',
-      chunks: ['options'],
-      cache: false,
-    }),
-    new HtmlWebpackPlugin({
       template: path.join(__dirname, 'src', 'pages', 'Popup', 'index.html'),
       filename: 'popup.html',
       chunks: ['popup'],
       cache: false,
+    }),
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, 'src', 'pages', 'App', 'index.html'),
+      filename: 'app.html',
+      chunks: ['app'],
+      cache: false,
+    }),
+    new webpack.ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
     }),
   ],
   infrastructureLogging: {
