@@ -1,12 +1,8 @@
 {
-  "name": "chrome-extension-boilerplate-react",
-  "version": "4.3.5",
-  "description": "A chrome extension boilerplate built with React 17, Webpack 5, and Webpack Dev Server 4",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lxieyang/chrome-extension-boilerplate-react.git"
-  },
+  "name": "nearpass-ext",
+  "version": "1.0.0",
+  "description": "Open-source, decentralized and private password manager built on Near Protocol.",
+  "license": "GPL-3.0",
   "scripts": {
     "build": "node utils/build.js",
     "start": "node utils/webserver.js",
