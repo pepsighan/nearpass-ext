@@ -1,6 +1,6 @@
-import { Typography } from '@mui/material';
 import React from 'react';
+import NearLogin from '../../../components/NearLogin';
 
 export default function Home() {
-  return <Typography variant="h5">Nearpass</Typography>;
+  return <NearLogin />;
 }
