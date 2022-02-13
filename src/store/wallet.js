@@ -13,7 +13,21 @@ const useWalletInner = create(() => ({
 }));
 
 /**
- * Get the initialized contract. This is the place where each interaction with
+ * Gets the wallet for an account.
+ */
+export function useWallet() {
+  return useWalletInner(useCallback((state) => state.wallet, []));
+}
+
+/**
+ * Gets the currently logged in account.
+ */
+export function useAccountId() {
+  return useWalletInner(useCallback((state) => state.accountId, []));
+}
+
+/**
+ * Gets the initialized contract. This is the place where each interaction with
  * the smart contract is made.
  */
 export function useContract() {
