@@ -17,6 +17,7 @@
 .env.test.local
 .env.production.local
 .history
+yarn-error.log
 
 # secrets
 secrets.*.js

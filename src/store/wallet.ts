@@ -2,11 +2,18 @@ import create from 'zustand';
 import { useCallback, useEffect } from 'react';
 import { connect, Contract, keyStores, WalletConnection } from 'near-api-js';
 import networkConfig from '../config/networkConfig';
+import config from '../config/config';
+
+type UseWalletInnerStore = {
+  wallet: WalletConnection | null;
+  contract: Contract | null;
+  accountId: string | null;
+};
 
 /**
  * Store for the wallet and contract object.
  */
-const useWalletInner = create(() => ({
+const useWalletInner = create<UseWalletInnerStore>(() => ({
   wallet: null,
   contract: null,
   accountId: null,
@@ -51,7 +58,7 @@ export function useInitializeWallet() {
       // Get the current logged in account id. If not authorized it is empty.
       const accountId = wallet.getAccountId();
       // Create an instance of the contract.
-      const contract = new Contract(wallet.account(), netConf.contractName, {
+      const contract = new Contract(wallet.account(), config.CONTRACT_NAME, {
         viewMethods: [
           'get_site_password',
           'get_all_site_password_ids',
@@ -80,8 +87,11 @@ export function useLogin() {
   const wallet = useWallet();
 
   return useCallback(async () => {
-    const netConf = networkConfig();
-    await wallet.requestSignIn(netConf.contractName);
+    if (!wallet) {
+      throw new Error('Wallet is not initialized yet');
+    }
+
+    await wallet.requestSignIn(config.CONTRACT_NAME);
   }, [wallet]);
 }
 
@@ -92,6 +102,10 @@ export function useLogout() {
   const wallet = useWallet();
 
   return useCallback(() => {
+    if (!wallet) {
+      throw new Error('Wallet is not initialized yet');
+    }
+
     wallet.signOut();
     useWalletInner.setState({ accountId: null });
   }, [wallet]);
