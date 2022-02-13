@@ -1,3 +1,4 @@
+require('dotenv').config();
 const webpack = require('webpack'),
   path = require('path'),
   fileSystem = require('fs-extra'),
@@ -8,6 +9,10 @@ const webpack = require('webpack'),
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 const ASSET_PATH = process.env.ASSET_PATH || '/';
+
+if (!process.env.CONTRACT_NAME) {
+  throw new Error('CONTRACT_NAME is not defined');
+}
 
 const alias = {
   'react-dom': '@hot-loader/react-dom',
@@ -110,7 +115,7 @@ const options = {
     new CleanWebpackPlugin({ verbose: false }),
     new webpack.ProgressPlugin(),
     // expose and write the allowed env vars on the compiled bundle
-    new webpack.EnvironmentPlugin(['NODE_ENV']),
+    new webpack.EnvironmentPlugin(['NODE_ENV', 'CONTRACT_NAME']),
     new CopyWebpackPlugin({
       patterns: [
         {
