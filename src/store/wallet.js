@@ -64,3 +64,27 @@ export function useInitializeWallet() {
     })();
   }, []);
 }
+
+/**
+ * Logs in with the wallet.
+ */
+export function useLogin() {
+  const wallet = useWallet();
+
+  return useCallback(async () => {
+    const netConf = networkConfig();
+    await wallet.requestSignIn(netConf.contractName);
+  }, []);
+}
+
+/**
+ * Logouts the current wallet account.
+ */
+export function useLogout() {
+  const wallet = useWallet();
+
+  return useCallback(() => {
+    wallet.signOut();
+    useWalletInner.setState({ accountId: null });
+  }, []);
+}
