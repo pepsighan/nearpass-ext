@@ -174,6 +174,9 @@ const options = {
       chunks: ['popup'],
       cache: false,
     }),
+    new webpack.ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+    }),
   ],
   infrastructureLogging: {
     level: 'info',
