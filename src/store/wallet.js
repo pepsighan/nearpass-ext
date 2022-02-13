@@ -82,7 +82,7 @@ export function useLogin() {
   return useCallback(async () => {
     const netConf = networkConfig();
     await wallet.requestSignIn(netConf.contractName);
-  }, []);
+  }, [wallet]);
 }
 
 /**
@@ -94,5 +94,5 @@ export function useLogout() {
   return useCallback(() => {
     wallet.signOut();
     useWalletInner.setState({ accountId: null });
-  }, []);
+  }, [wallet]);
 }
