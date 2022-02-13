@@ -9,10 +9,15 @@
     "prettier": "prettier --write '**/*.{js,jsx,ts,tsx,json,css,scss,md}'"
   },
   "dependencies": {
+    "@emotion/react": "^11.7.1",
+    "@emotion/styled": "^11.6.0",
     "@hot-loader/react-dom": "^17.0.2",
+    "@mui/material": "^5.4.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-hot-loader": "^4.13.0"
+    "react-helmet": "^6.1.0",
+    "react-hot-loader": "^4.13.0",
+    "react-router-dom": "^6.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.17.0",
