@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { HmacSHA512 } from 'crypto-js';
 import { useAccountId, useContract, useWallet } from './wallet';
 import networkConfig from '../config/networkConfig';
+import { WalletConnection } from 'near-api-js';
 
 type UseAdminPasswordInnerStore = {
   password: string | null;
@@ -31,6 +32,43 @@ export function verifyAdminPassword(password: string): boolean {
 }
 
 /**
+ * Get the signature after signing the message with the wallet.
+ */
+async function signAccountPasswordCombination(
+  wallet: WalletConnection,
+  accountId: string,
+  password: string
+): Promise<string> {
+  const netConf = networkConfig();
+  const signed = await wallet
+    .account()
+    .connection.signer.signMessage(
+      new TextEncoder().encode(accountId + password),
+      accountId!,
+      netConf.networkId
+    );
+
+  return new TextDecoder().decode(signed.signature);
+}
+
+/**
+ * Hash the account password combination after being signed by the wallet.
+ */
+async function hashAccountPasswordCombination(
+  wallet: WalletConnection,
+  accountId: string,
+  password: string
+): Promise<string> {
+  const signature = await signAccountPasswordCombination(
+    wallet,
+    accountId,
+    password
+  );
+  // Hash the signature with the password.
+  return HmacSHA512(signature, password).toString();
+}
+
+/**
  * Securely store the master password such that it can be used in the process
  * of encrypting the passwords in the manager.
  */
@@ -47,23 +85,11 @@ export function useSecurelyStoreMasterPassword() {
 
       // If this throws with an error, the hash is already stored.
       await contract.get_account_hash();
-
-      const netConf = networkConfig();
-      // Sign the combination of accountId + password with the wallet.
-      const signature = await wallet
-        .account()
-        .connection.signer.signMessage(
-          new TextEncoder().encode(accountId + password),
-          accountId!,
-          netConf.networkId
-        );
-
-      // Hash the signature with the password.
-      const hash = HmacSHA512(
-        new TextDecoder().decode(signature.signature),
+      const hash = await hashAccountPasswordCombination(
+        wallet,
+        accountId!,
         password
-      ).toString();
-
+      );
       // Store the hash.
       await contract.initialize_account_hash({ hash });
       // TODO: Remember the password in-memory, somehow.
@@ -88,22 +114,11 @@ export function useVerifyMasterPassword() {
 
       // If the hash is not stored yet, it will throw error.
       const storedHash = await contract.get_account_hash();
-
-      const netConf = networkConfig();
-      // Sign the combination of accountId + password with the wallet.
-      const signature = await wallet
-        .account()
-        .connection.signer.signMessage(
-          new TextEncoder().encode(accountId + password),
-          accountId!,
-          netConf.networkId
-        );
-
-      // Hash the signature with the password.
-      const hash = HmacSHA512(
-        new TextDecoder().decode(signature.signature),
+      const hash = await hashAccountPasswordCombination(
+        wallet,
+        accountId!,
         password
-      ).toString();
+      );
 
       // TODO: Remember the password for later use.
       return hash === storedHash;
@@ -133,17 +148,6 @@ export function useGetEncryptionKey() {
       throw new Error('Invalid password');
     }
 
-    const netConf = networkConfig();
-
-    // Sign the combination of accountId + password with the wallet.
-    const key = await wallet
-      .account()
-      .connection.signer.signMessage(
-        new TextEncoder().encode(accountId + password),
-        accountId!,
-        netConf.networkId
-      );
-
-    return key.signature;
+    return await signAccountPasswordCombination(wallet, accountId!, password);
   }, [accountId, wallet, verifyMasterPassword]);
 }
