@@ -1,4 +1,12 @@
-import { Grid, List, ListItem, ListItemText } from '@mui/material';
+import {
+  Button,
+  Container,
+  Grid,
+  List,
+  ListItem,
+  ListItemText,
+  Stack,
+} from '@mui/material';
 import React from 'react';
 
 export default function Passwords() {
@@ -23,7 +31,13 @@ export default function Passwords() {
             ))}
         </List>
       </Grid>
-      <Grid></Grid>
+      <Grid item flex={1}>
+        <Container>
+          <Stack alignItems="flex-end" mt={2}>
+            <Button variant="contained">Add Password</Button>
+          </Stack>
+        </Container>
+      </Grid>
     </Grid>
   );
 }
