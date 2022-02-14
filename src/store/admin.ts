@@ -1,18 +1,19 @@
 import create from 'zustand';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AES, HmacSHA512 } from 'crypto-js';
 import { useAccountId, useContract, useWallet } from './wallet';
 import { persist } from 'zustand/middleware';
+import { WalletConnection } from 'near-api-js';
 
-type UseAdminPasswordInnerStore = {
+type UseMasterPasswordInnerStore = {
   encPassword: string | null;
 };
 
 /**
- * Stores the admin password for the account which is used to authenticate
+ * Stores the master password for the account which is used to authenticate
  * the user when they open the app and is also used to encrypt their passwords.
  */
-const useAdminPasswordInner = create<UseAdminPasswordInnerStore>(
+const useMasterPasswordInner = create<UseMasterPasswordInnerStore>(
   persist(
     (set, get) => ({
       encPassword: null,
@@ -25,7 +26,47 @@ const useAdminPasswordInner = create<UseAdminPasswordInnerStore>(
 const appName = 'nearpass';
 
 /**
- * Sets admin password.
+ * Gets the key which is used to encrypt password before storing in local
+ * storage. The key is going to be same for an account for a login session.
+ * It will change between accounts and login session.
+ */
+async function getEncryptionKey(wallet: WalletConnection) {
+  const signed = await wallet
+    .account()
+    .connection.signer.signMessage(new TextEncoder().encode(appName));
+  return new TextDecoder().decode(signed.signature);
+}
+
+/**
+ * Gets the master password in plain text.
+ */
+export function useMasterPassword() {
+  const wallet = useWallet();
+  const [key, setKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!wallet) {
+      return;
+    }
+
+    getEncryptionKey(wallet).then(setKey);
+  }, [wallet, setKey]);
+
+  return useMasterPasswordInner(
+    useCallback(
+      (state) => {
+        if (!key || !state.encPassword) {
+          return null;
+        }
+        return AES.decrypt(state.encPassword, key).toString();
+      },
+      [key]
+    )
+  );
+}
+
+/**
+ * Sets master password.
  */
 export function useSetMasterPassword() {
   const wallet = useWallet();
@@ -36,18 +77,10 @@ export function useSetMasterPassword() {
         throw new Error('Wallet is not initialized.');
       }
 
-      // Signature is going to be same for an account for a login session.
-      // It will change between accounts and login sessions.
-      const signed = await wallet
-        .account()
-        .connection.signer.signMessage(new TextEncoder().encode(appName));
+      const key = await getEncryptionKey(wallet);
+      const encPassword = AES.encrypt(password, key).toString();
 
-      const encPassword = AES.encrypt(
-        password,
-        new TextDecoder().decode(signed.signature)
-      ).toString();
-
-      useAdminPasswordInner.setState({ encPassword });
+      useMasterPasswordInner.setState({ encPassword });
     },
     [wallet]
   );
