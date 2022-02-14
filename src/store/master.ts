@@ -4,6 +4,7 @@ import { AES, HmacSHA512 } from 'crypto-js';
 import { useAccountId, useContract, useWallet } from './wallet';
 import { persist } from 'zustand/middleware';
 import { WalletConnection } from 'near-api-js';
+import { useAsync } from 'react-use';
 
 type UseMasterPasswordInnerStore = {
   encPassword: string | null;
@@ -119,7 +120,7 @@ export function useSecurelyStoreMasterPassword() {
       }
 
       // If this throws with an error, the hash is already stored.
-      await contract.get_account_hash();
+      await contract.get_account_hash({ account_id: accountId! });
       const hash = await hashAccountPasswordCombination(accountId!, password);
 
       // Store the hash.
@@ -145,7 +146,9 @@ export function useVerifyMasterPassword() {
       }
 
       // If the hash is not stored yet, it will throw error.
-      const storedHash = await contract.get_account_hash();
+      const storedHash = await contract.get_account_hash({
+        account_id: accountId!,
+      });
       const hash = await hashAccountPasswordCombination(accountId!, password);
 
       const isCorrect = hash === storedHash;
@@ -154,4 +157,30 @@ export function useVerifyMasterPassword() {
     },
     [accountId, contract]
   );
+}
+
+/**
+ * Gets if the user has configured master password.
+ */
+export function useIsMasterPasswordIsConfigured() {
+  const contract = useContract();
+
+  return useAsync(async () => {
+    if (!contract) {
+      return null;
+    }
+
+    try {
+      return await contract.get_account_hash({
+        account_id: contract.account.accountId,
+      });
+    } catch (err: any) {
+      if (err.toString().includes('NearpassAccountNotInitialized')) {
+        // Not initialized yet.
+        return null;
+      }
+
+      throw err;
+    }
+  }, [contract]);
 }

@@ -5,6 +5,7 @@ import Sidebar, { drawerWidth } from './Sidebar';
 import Passwords from './Passwords';
 import Settings from './Settings';
 import { Box } from '@mui/material';
+import ConfigureMasterPassword from './ConfigureMasterPassword';
 
 export default function Dashboard() {
   return (
@@ -17,6 +18,7 @@ export default function Dashboard() {
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </Box>
+      <ConfigureMasterPassword />
     </>
   );
 }
