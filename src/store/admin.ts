@@ -1,7 +1,7 @@
 import create from 'zustand';
 import { useCallback } from 'react';
 import { HmacSHA512 } from 'crypto-js';
-import { useAccountId, useWallet } from './wallet';
+import { useAccountId, useContract, useWallet } from './wallet';
 import networkConfig from '../config/networkConfig';
 
 type UseAdminPasswordInnerStore = {
@@ -37,15 +37,18 @@ export function verifyAdminPassword(password: string): boolean {
 function useSecurelyStoreMasterPassword() {
   const accountId = useAccountId();
   const wallet = useWallet();
+  const contract = useContract();
 
   return useCallback(
     async (password: string) => {
-      if (!wallet) {
+      if (!wallet || !contract) {
         throw new Error('Wallet not initialized yet');
       }
 
-      const netConf = networkConfig();
+      // If this throws with an error, the hash is already stored.
+      await contract.get_account_hash();
 
+      const netConf = networkConfig();
       // Sign the combination of accountId + password with the wallet.
       const signature = await wallet
         .account()
@@ -59,10 +62,12 @@ function useSecurelyStoreMasterPassword() {
       const hash = HmacSHA512(
         new TextDecoder().decode(signature.signature),
         password
-      );
+      ).toString();
 
-      // TODO: Store the hash in the chain.
+      // Store the hash.
+      await contract.initialize_account_hash({ hash });
+      // TODO: Remember the password in-memory, somehow.
     },
-    [wallet, accountId]
+    [wallet, accountId, contract]
   );
 }

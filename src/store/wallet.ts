@@ -4,9 +4,14 @@ import { connect, Contract, keyStores, WalletConnection } from 'near-api-js';
 import networkConfig from '../config/networkConfig';
 import config from '../config/config';
 
+type NearpassContract = {
+  get_account_hash(): Promise<string>;
+  initialize_account_hash(arg: { hash: string }): Promise<void>;
+};
+
 type UseWalletInnerStore = {
   wallet: WalletConnection | null;
-  contract: Contract | null;
+  contract: (NearpassContract & Contract) | null;
   accountId: string | null;
 };
 
@@ -76,7 +81,7 @@ export function useInitializeWallet() {
       useWalletInner.setState({
         wallet,
         accountId,
-        contract,
+        contract: contract as (NearpassContract & Contract) | null,
       });
     })();
   }, []);
