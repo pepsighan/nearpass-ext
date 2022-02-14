@@ -7,6 +7,7 @@ import {
   Toolbar,
 } from '@mui/material';
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const drawerWidth = 240;
 
@@ -27,13 +28,10 @@ export default function Sidebar() {
       <Toolbar />
       <Divider sx={{ mt: '-1px' }} />
       <List>
-        <ListItem button>
-          <ListItemText primary="Your Account" />
-        </ListItem>
-        <ListItem button>
+        <ListItem button component={Link} to="/">
           <ListItemText primary="Passwords" />
         </ListItem>
-        <ListItem button>
+        <ListItem button component={Link} to="/settings">
           <ListItemText primary="Settings" />
         </ListItem>
       </List>
