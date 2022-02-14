@@ -21,7 +21,7 @@ const appName = 'nearpass';
 /**
  * Sets admin password.
  */
-export function useSetAdminPassword() {
+export function useSetMasterPassword() {
   const wallet = useWallet();
 
   return useCallback(
@@ -71,6 +71,7 @@ export async function hashAccountPasswordCombination(
 export function useSecurelyStoreMasterPassword() {
   const accountId = useAccountId();
   const contract = useContract();
+  const setMasterPassword = useSetMasterPassword();
 
   return useCallback(
     async (password: string) => {
@@ -81,9 +82,10 @@ export function useSecurelyStoreMasterPassword() {
       // If this throws with an error, the hash is already stored.
       await contract.get_account_hash();
       const hash = await hashAccountPasswordCombination(accountId!, password);
+
       // Store the hash.
       await contract.initialize_account_hash({ hash });
-      // TODO: Remember the password in-memory, somehow.
+      await setMasterPassword(password);
     },
     [accountId, contract]
   );
@@ -95,6 +97,7 @@ export function useSecurelyStoreMasterPassword() {
 export function useVerifyMasterPassword() {
   const accountId = useAccountId();
   const contract = useContract();
+  const setMasterPassword = useSetMasterPassword();
 
   return useCallback(
     async (password: string) => {
@@ -106,8 +109,9 @@ export function useVerifyMasterPassword() {
       const storedHash = await contract.get_account_hash();
       const hash = await hashAccountPasswordCombination(accountId!, password);
 
-      // TODO: Remember the password for later use.
-      return hash === storedHash;
+      const isCorrect = hash === storedHash;
+      await setMasterPassword(password);
+      return isCorrect;
     },
     [accountId, contract]
   );
