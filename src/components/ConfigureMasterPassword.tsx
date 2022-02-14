@@ -1,14 +1,17 @@
 import {
   Box,
-  Button,
   Dialog,
   DialogContent,
   DialogTitle,
   TextField,
   Typography,
 } from '@mui/material';
+import { LoadingButton } from '@mui/lab';
 import React, { useCallback } from 'react';
-import { useIsMasterPasswordIsConfigured } from '../store/master';
+import {
+  useIsMasterPasswordIsConfigured,
+  useSecurelyStoreMasterPassword,
+} from '../store/master';
 import { useForm } from 'react-hook-form';
 import { materialRegister } from '../materialRegister';
 import { z } from 'zod';
@@ -25,10 +28,10 @@ const schema = z
   });
 
 export default function ConfigureMasterPassword() {
-  const { value, loading } = useIsMasterPasswordIsConfigured();
+  const [{ value, loading }, refetch] = useIsMasterPasswordIsConfigured();
   const {
     register,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     handleSubmit,
   } = useForm({
     defaultValues: {
@@ -38,7 +41,15 @@ export default function ConfigureMasterPassword() {
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = useCallback((state) => {}, []);
+  const storeMasterPassword = useSecurelyStoreMasterPassword();
+
+  const onSubmit = useCallback(
+    async (state) => {
+      await storeMasterPassword(state.masterPassword);
+      await refetch();
+    },
+    [storeMasterPassword]
+  );
 
   return (
     <Dialog open={!loading && !Boolean(value)}>
@@ -73,15 +84,16 @@ export default function ConfigureMasterPassword() {
             Also, rest assured that this password won't leave your device.
           </Typography>
 
-          <Button
+          <LoadingButton
             type="submit"
             variant="contained"
             fullWidth
             size="large"
+            loading={isSubmitting}
             sx={{ mt: 2 }}
           >
             Save Password
-          </Button>
+          </LoadingButton>
         </Box>
       </DialogContent>
     </Dialog>

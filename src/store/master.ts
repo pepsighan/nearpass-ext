@@ -4,7 +4,7 @@ import { AES, HmacSHA512 } from 'crypto-js';
 import { useAccountId, useContract, useWallet } from './wallet';
 import { persist } from 'zustand/middleware';
 import { WalletConnection } from 'near-api-js';
-import { useAsync } from 'react-use';
+import { useAsyncFn, useEffectOnce } from 'react-use';
 
 type UseMasterPasswordInnerStore = {
   encPassword: string | null;
@@ -165,7 +165,7 @@ export function useVerifyMasterPassword() {
 export function useIsMasterPasswordIsConfigured() {
   const contract = useContract();
 
-  return useAsync(async () => {
+  const obj = useAsyncFn(async () => {
     if (!contract) {
       return null;
     }
@@ -183,4 +183,10 @@ export function useIsMasterPasswordIsConfigured() {
       throw err;
     }
   }, [contract]);
+
+  useEffectOnce(() => {
+    obj[1]();
+  });
+
+  return obj;
 }
