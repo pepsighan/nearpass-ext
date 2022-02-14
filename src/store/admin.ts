@@ -34,7 +34,7 @@ export function verifyAdminPassword(password: string): boolean {
  * Securely store the master password such that it can be used in the process
  * of encrypting the passwords in the manager.
  */
-function useSecurelyStoreMasterPassword() {
+export function useSecurelyStoreMasterPassword() {
   const accountId = useAccountId();
   const wallet = useWallet();
   const contract = useContract();
@@ -75,7 +75,7 @@ function useSecurelyStoreMasterPassword() {
 /**
  * Verify whether the given master password is correct.
  */
-function useVerifyMasterPassword() {
+export function useVerifyMasterPassword() {
   const accountId = useAccountId();
   const wallet = useWallet();
   const contract = useContract();
@@ -105,8 +105,45 @@ function useVerifyMasterPassword() {
         password
       ).toString();
 
+      // TODO: Remember the password for later use.
       return hash === storedHash;
     },
     [accountId, wallet, contract]
   );
+}
+
+/**
+ * Get the key which is used to encrypt the data stored on the chain.
+ */
+export function useGetEncryptionKey() {
+  const accountId = useAccountId();
+  const wallet = useWallet();
+  const verifyMasterPassword = useVerifyMasterPassword();
+
+  return useCallback(async () => {
+    if (!wallet) {
+      throw new Error('Wallet not initialized yet');
+    }
+
+    // TODO: Get the password from store.
+    const password = '';
+
+    const isValid = await verifyMasterPassword(password);
+    if (!isValid) {
+      throw new Error('Invalid password');
+    }
+
+    const netConf = networkConfig();
+
+    // Sign the combination of accountId + password with the wallet.
+    const key = await wallet
+      .account()
+      .connection.signer.signMessage(
+        new TextEncoder().encode(accountId + password),
+        accountId!,
+        netConf.networkId
+      );
+
+    return key.signature;
+  }, [accountId, wallet, verifyMasterPassword]);
 }
