@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet';
 import React from 'react';
-import { CssBaseline } from '@mui/material';
+import { CssBaseline, GlobalStyles } from '@mui/material';
 
 export default function BaseStyles() {
   return (
@@ -13,6 +13,13 @@ export default function BaseStyles() {
         />
       </Helmet>
       <CssBaseline />
+      <GlobalStyles
+        styles={`
+          html {
+            font-size: 14px;
+          }
+        `}
+      />
     </>
   );
 }

@@ -32,7 +32,7 @@ export default function AccountButton() {
 
       <Menu {...bindMenu(popupState)} elevation={1}>
         <MenuItem onClick={onLogout} sx={{ width: 200 }}>
-          <Typography variant="body2">Logout</Typography>
+          <Typography>Logout</Typography>
         </MenuItem>
       </Menu>
     </>
