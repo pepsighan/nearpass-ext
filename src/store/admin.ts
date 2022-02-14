@@ -1,10 +1,10 @@
 import create from 'zustand';
 import { useCallback } from 'react';
-import { HmacSHA512 } from 'crypto-js';
-import { useAccountId, useContract } from './wallet';
+import { AES, HmacSHA512 } from 'crypto-js';
+import { useAccountId, useContract, useWallet } from './wallet';
 
 type UseAdminPasswordInnerStore = {
-  password: string | null;
+  encPassword: string | null;
 };
 
 /**
@@ -12,21 +12,39 @@ type UseAdminPasswordInnerStore = {
  * the user when they open the app and is also used to encrypt their passwords.
  */
 const useAdminPasswordInner = create<UseAdminPasswordInnerStore>(() => ({
-  password: null,
+  encPassword: null,
 }));
 
-/**
- * Stores admin password.
- */
-export function storeAdminPassword(password: string) {
-  useAdminPasswordInner.setState({ password });
-}
+// Do not change the value, because this is used in signing and encryption.
+const appName = 'nearpass';
 
 /**
- * Verifies whether the given password is correct.
+ * Sets admin password.
  */
-export function verifyAdminPassword(password: string): boolean {
-  return useAdminPasswordInner.getState().password === password;
+export function useSetAdminPassword() {
+  const wallet = useWallet();
+
+  return useCallback(
+    async (password: string) => {
+      if (!wallet) {
+        throw new Error('Wallet is not initialized.');
+      }
+
+      // Signature is going to be same for an account for a login session.
+      // It will change between accounts and login sessions.
+      const signed = await wallet
+        .account()
+        .connection.signer.signMessage(new TextEncoder().encode(appName));
+
+      const encPassword = AES.encrypt(
+        password,
+        new TextDecoder().decode(signed.signature)
+      ).toString();
+
+      useAdminPasswordInner.setState({ encPassword });
+    },
+    [wallet]
+  );
 }
 
 /**
