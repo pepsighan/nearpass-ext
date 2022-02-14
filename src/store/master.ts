@@ -119,8 +119,23 @@ export function useSecurelyStoreMasterPassword() {
         throw new Error('Wallet not initialized yet');
       }
 
-      // If this throws with an error, the hash is already stored.
-      await contract.get_account_hash({ account_id: accountId! });
+      // If hash already exists, it cannot be initialized again.
+      let storedHash: string | undefined;
+      try {
+        storedHash = await contract.get_account_hash({
+          account_id: contract.account.accountId,
+        });
+      } catch (err: any) {
+        // Consume error if account hash is not initialized.
+        if (!err.toString().includes('NearpassAccountNotInitialized')) {
+          throw err;
+        }
+      }
+
+      if (storedHash) {
+        throw new Error('Master password is already initialized');
+      }
+
       const hash = await hashAccountPasswordCombination(accountId!, password);
 
       // Store the hash.
