@@ -13,14 +13,21 @@ export default function NearLogin() {
       </Helmet>
 
       <Stack alignItems="center" justifyContent="center" minHeight="100vh">
-        <Typography variant="h4" textAlign="center">
+        <Typography variant="h3" textAlign="center">
           Nearpass
         </Typography>
-        <Typography color="textSecondary" textAlign="center" mt={0.5}>
+        <Typography
+          component="p"
+          color="textSecondary"
+          textAlign="center"
+          variant="h6"
+          fontWeight="normal"
+          mt={0.5}
+        >
           Connect your NEAR wallet to view and store your passwords
         </Typography>
 
-        <Button variant="contained" sx={{ mt: 6 }} onClick={login}>
+        <Button variant="contained" size="large" sx={{ mt: 6 }} onClick={login}>
           Connect with NEAR Wallet
         </Button>
       </Stack>
