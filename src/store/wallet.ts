@@ -60,11 +60,13 @@ export function useInitializeWallet() {
       // Create an instance of the contract.
       const contract = new Contract(wallet.account(), config.CONTRACT_NAME, {
         viewMethods: [
+          'get_account_hash',
           'get_site_password',
           'get_all_site_password_ids',
           'get_site_passwords_by_ids',
         ],
         changeMethods: [
+          'initialize_account_hash',
           'add_site_password',
           'update_site_password',
           'delete_site_password',
