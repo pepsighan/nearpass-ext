@@ -2,6 +2,7 @@ import create from 'zustand';
 import { useCallback } from 'react';
 import { AES, HmacSHA512 } from 'crypto-js';
 import { useAccountId, useContract, useWallet } from './wallet';
+import { persist } from 'zustand/middleware';
 
 type UseAdminPasswordInnerStore = {
   encPassword: string | null;
@@ -11,9 +12,14 @@ type UseAdminPasswordInnerStore = {
  * Stores the admin password for the account which is used to authenticate
  * the user when they open the app and is also used to encrypt their passwords.
  */
-const useAdminPasswordInner = create<UseAdminPasswordInnerStore>(() => ({
-  encPassword: null,
-}));
+const useAdminPasswordInner = create<UseAdminPasswordInnerStore>(
+  persist(
+    (set, get) => ({
+      encPassword: null,
+    }),
+    { name: 'nearpass-session' }
+  )
+);
 
 // Do not change the value, because this is used in signing and encryption.
 const appName = 'nearpass';
