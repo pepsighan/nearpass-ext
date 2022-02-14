@@ -2,22 +2,20 @@ import React from 'react';
 import { ThemeProvider } from '@mui/material';
 import theme from '../../config/theme';
 import BaseStyles from '../../components/BaseStyles';
-import { HashRouter, Route, Routes } from 'react-router-dom';
-import Home from './Home';
-import { useInitializeWallet } from '../../store/wallet';
+import { HashRouter } from 'react-router-dom';
+import { useAccountId, useInitializeWallet } from '../../store/wallet';
+import Dashboard from '../../components/Dashboard';
+import NearLogin from '../../components/NearLogin';
 
 export default function App() {
   useInitializeWallet();
+  const accountId = useAccountId();
 
   return (
     <>
       <BaseStyles />
       <ThemeProvider theme={theme}>
-        <HashRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-          </Routes>
-        </HashRouter>
+        <HashRouter>{accountId ? <Dashboard /> : <NearLogin />}</HashRouter>
       </ThemeProvider>
     </>
   );

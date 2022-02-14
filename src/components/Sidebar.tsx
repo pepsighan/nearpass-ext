@@ -9,7 +9,7 @@ import {
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const drawerWidth = 240;
+export const drawerWidth = 240;
 
 export default function Sidebar() {
   return (
