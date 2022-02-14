@@ -1,9 +1,7 @@
 import create from 'zustand';
 import { useCallback } from 'react';
 import { HmacSHA512 } from 'crypto-js';
-import { useAccountId, useContract, useWallet } from './wallet';
-import networkConfig from '../config/networkConfig';
-import { WalletConnection } from 'near-api-js';
+import { useAccountId, useContract } from './wallet';
 
 type UseAdminPasswordInnerStore = {
   password: string | null;
@@ -32,40 +30,20 @@ export function verifyAdminPassword(password: string): boolean {
 }
 
 /**
- * Get the signature after signing the message with the wallet.
+ * Create a hash for the account and password which can then be safely
+ * stored in the chain. This hash is to be used to verify whether a password
+ * for an account is correct or not. Since, a single master password is used to
+ * encrypt all the data for an account stored on chain.
+ *
+ * Creating a hash assures that no part of the actual password whatsoever is
+ * stored on-chain and only its fingerprint is stored (which cannot be used
+ * to recover the original).
  */
-async function signAccountPasswordCombination(
-  wallet: WalletConnection,
+export async function hashAccountPasswordCombination(
   accountId: string,
   password: string
 ): Promise<string> {
-  const netConf = networkConfig();
-  const signed = await wallet
-    .account()
-    .connection.signer.signMessage(
-      new TextEncoder().encode(accountId + password),
-      accountId!,
-      netConf.networkId
-    );
-
-  return new TextDecoder().decode(signed.signature);
-}
-
-/**
- * Hash the account password combination after being signed by the wallet.
- */
-async function hashAccountPasswordCombination(
-  wallet: WalletConnection,
-  accountId: string,
-  password: string
-): Promise<string> {
-  const signature = await signAccountPasswordCombination(
-    wallet,
-    accountId,
-    password
-  );
-  // Hash the signature with the password.
-  return HmacSHA512(signature, password).toString();
+  return HmacSHA512(accountId + password, password).toString();
 }
 
 /**
@@ -74,27 +52,22 @@ async function hashAccountPasswordCombination(
  */
 export function useSecurelyStoreMasterPassword() {
   const accountId = useAccountId();
-  const wallet = useWallet();
   const contract = useContract();
 
   return useCallback(
     async (password: string) => {
-      if (!wallet || !contract) {
+      if (!contract) {
         throw new Error('Wallet not initialized yet');
       }
 
       // If this throws with an error, the hash is already stored.
       await contract.get_account_hash();
-      const hash = await hashAccountPasswordCombination(
-        wallet,
-        accountId!,
-        password
-      );
+      const hash = await hashAccountPasswordCombination(accountId!, password);
       // Store the hash.
       await contract.initialize_account_hash({ hash });
       // TODO: Remember the password in-memory, somehow.
     },
-    [wallet, accountId, contract]
+    [accountId, contract]
   );
 }
 
@@ -103,51 +76,21 @@ export function useSecurelyStoreMasterPassword() {
  */
 export function useVerifyMasterPassword() {
   const accountId = useAccountId();
-  const wallet = useWallet();
   const contract = useContract();
 
   return useCallback(
     async (password: string) => {
-      if (!wallet || !contract) {
+      if (!contract) {
         throw new Error('Wallet not initialized yet');
       }
 
       // If the hash is not stored yet, it will throw error.
       const storedHash = await contract.get_account_hash();
-      const hash = await hashAccountPasswordCombination(
-        wallet,
-        accountId!,
-        password
-      );
+      const hash = await hashAccountPasswordCombination(accountId!, password);
 
       // TODO: Remember the password for later use.
       return hash === storedHash;
     },
-    [accountId, wallet, contract]
+    [accountId, contract]
   );
-}
-
-/**
- * Get the key which is used to encrypt the data stored on the chain.
- */
-export function useGetEncryptionKey() {
-  const accountId = useAccountId();
-  const wallet = useWallet();
-  const verifyMasterPassword = useVerifyMasterPassword();
-
-  return useCallback(async () => {
-    if (!wallet) {
-      throw new Error('Wallet not initialized yet');
-    }
-
-    // TODO: Get the password from store.
-    const password = '';
-
-    const isValid = await verifyMasterPassword(password);
-    if (!isValid) {
-      throw new Error('Invalid password');
-    }
-
-    return await signAccountPasswordCombination(wallet, accountId!, password);
-  }, [accountId, wallet, verifyMasterPassword]);
 }
