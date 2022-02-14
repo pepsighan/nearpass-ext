@@ -71,3 +71,42 @@ function useSecurelyStoreMasterPassword() {
     [wallet, accountId, contract]
   );
 }
+
+/**
+ * Verify whether the given master password is correct.
+ */
+function useVerifyMasterPassword() {
+  const accountId = useAccountId();
+  const wallet = useWallet();
+  const contract = useContract();
+
+  return useCallback(
+    async (password: string) => {
+      if (!wallet || !contract) {
+        throw new Error('Wallet not initialized yet');
+      }
+
+      // If the hash is not stored yet, it will throw error.
+      const storedHash = await contract.get_account_hash();
+
+      const netConf = networkConfig();
+      // Sign the combination of accountId + password with the wallet.
+      const signature = await wallet
+        .account()
+        .connection.signer.signMessage(
+          new TextEncoder().encode(accountId + password),
+          accountId!,
+          netConf.networkId
+        );
+
+      // Hash the signature with the password.
+      const hash = HmacSHA512(
+        new TextDecoder().decode(signature.signature),
+        password
+      ).toString();
+
+      return hash === storedHash;
+    },
+    [accountId, wallet, contract]
+  );
+}
