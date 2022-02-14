@@ -8,6 +8,10 @@ const webpack = require('webpack'),
   TerserPlugin = require('terser-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
+// Because on the browser process.env does not exist but the near-api-js
+// makes use of the following env.
+process.env.NEAR_NO_LOGS = true;
+
 const ASSET_PATH = process.env.ASSET_PATH || '/';
 
 if (!process.env.CONTRACT_NAME) {
@@ -115,7 +119,11 @@ const options = {
     new CleanWebpackPlugin({ verbose: false }),
     new webpack.ProgressPlugin(),
     // expose and write the allowed env vars on the compiled bundle
-    new webpack.EnvironmentPlugin(['NODE_ENV', 'CONTRACT_NAME']),
+    new webpack.EnvironmentPlugin([
+      'NODE_ENV',
+      'CONTRACT_NAME',
+      'NEAR_NO_LOGS',
+    ]),
     new CopyWebpackPlugin({
       patterns: [
         {
