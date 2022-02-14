@@ -1,6 +1,29 @@
-import { Typography } from '@mui/material';
+import { Grid, List, ListItem, ListItemText } from '@mui/material';
 import React from 'react';
 
 export default function Passwords() {
-  return <Typography>Passwords</Typography>;
+  return (
+    <Grid container>
+      <Grid
+        item
+        sx={{
+          borderRight: '1px solid',
+          borderRightColor: 'grey.300',
+          height: 'calc(100vh - 64px)',
+          overflow: 'auto',
+        }}
+      >
+        <List sx={{ minWidth: 200 }}>
+          {Array(20)
+            .fill(0)
+            .map((_, index) => (
+              <ListItem key={index} button>
+                <ListItemText primary="Passwords" />
+              </ListItem>
+            ))}
+        </List>
+      </Grid>
+      <Grid></Grid>
+    </Grid>
+  );
 }
