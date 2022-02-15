@@ -1,9 +1,11 @@
 import { Container, Grid, Stack } from '@mui/material';
-import React from 'react';
+import React, { useState } from 'react';
 import NewSitePassword from './NewSitePassword';
 import PasswordList from './PasswordList';
 
 export default function Passwords() {
+  const [currentPassIndex, setCurrentPassIndex] = useState(0);
+
   return (
     <Grid container>
       <Grid
@@ -15,7 +17,7 @@ export default function Passwords() {
           overflow: 'auto',
         }}
       >
-        <PasswordList />
+        <PasswordList onSelect={setCurrentPassIndex} />
       </Grid>
       <Grid item flex={1}>
         <Container>
