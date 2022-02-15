@@ -1,13 +1,7 @@
-import {
-  Container,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  Stack,
-} from '@mui/material';
+import { Container, Grid, Stack } from '@mui/material';
 import React from 'react';
 import NewSitePassword from './NewSitePassword';
+import PasswordList from './PasswordList';
 
 export default function Passwords() {
   return (
@@ -21,15 +15,7 @@ export default function Passwords() {
           overflow: 'auto',
         }}
       >
-        <List sx={{ minWidth: 200 }}>
-          {Array(20)
-            .fill(0)
-            .map((_, index) => (
-              <ListItem key={index} button>
-                <ListItemText primary="Passwords" />
-              </ListItem>
-            ))}
-        </List>
+        <PasswordList />
       </Grid>
       <Grid item flex={1}>
         <Container>
