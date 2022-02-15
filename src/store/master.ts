@@ -1,6 +1,6 @@
 import create from 'zustand';
 import { useCallback, useEffect, useState } from 'react';
-import { AES, HmacSHA512 } from 'crypto-js';
+import { AES, enc, HmacSHA512 } from 'crypto-js';
 import { useAccountId, useContract, useWallet } from './wallet';
 import { persist } from 'zustand/middleware';
 import { WalletConnection } from 'near-api-js';
@@ -66,7 +66,7 @@ export function useMasterPassword() {
         if (!key || !state.encPassword) {
           return null;
         }
-        return AES.decrypt(state.encPassword, key).toString();
+        return AES.decrypt(state.encPassword, key).toString(enc.Utf8);
       },
       [key]
     )
