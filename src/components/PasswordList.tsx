@@ -9,7 +9,7 @@ export default function PasswordList() {
     <List sx={{ minWidth: 200 }}>
       {(data ?? []).map((pass, index) => (
         <ListItem key={index} button>
-          <ListItemText primary={pass.website} />
+          <ListItemText primary={pass.username} secondary={pass.website} />
         </ListItem>
       ))}
 
