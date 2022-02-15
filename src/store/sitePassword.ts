@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useContract } from './wallet';
 import { useMasterPassword } from './master';
 import { AES } from 'crypto-js';
@@ -45,7 +45,7 @@ export function useAllSitePasswords() {
   const contract = useContract();
   const masterPassword = useMasterPassword();
 
-  return useQuery('all-site-passwords', async () => {
+  const query = useQuery('all-site-passwords', async () => {
     if (!contract || !masterPassword) {
       return [];
     }
@@ -63,4 +63,11 @@ export function useAllSitePasswords() {
       return JSON.parse(decoded) as SitePassword;
     });
   });
+
+  useEffect(() => {
+    query.refetch();
+    // Refetch whenever the contract and password change.
+  }, [contract, masterPassword]);
+
+  return query;
 }
