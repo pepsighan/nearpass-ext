@@ -8,6 +8,11 @@ type NearpassContract = {
   get_account_hash(arg: { account_id: string }): Promise<string>;
   initialize_account_hash(arg: { hash: string }): Promise<void>;
   add_site_password(arg: { enc_pass: string }): Promise<string>;
+  get_all_site_password_ids(arg: { account_id: string }): Promise<string[]>;
+  get_site_passwords_by_ids(arg: {
+    account_id: string;
+    pass_ids: string[];
+  }): Promise<string[]>;
 };
 
 type UseWalletInnerStore = {
