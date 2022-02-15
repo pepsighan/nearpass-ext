@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useContract } from './wallet';
 import { useMasterPassword } from './master';
-import { AES } from 'crypto-js';
+import { AES, enc } from 'crypto-js';
 import { useQuery } from 'react-query';
 
 type SitePassword = {
@@ -53,13 +53,14 @@ export function useAllSitePasswords() {
     const ids = await contract.get_all_site_password_ids({
       account_id: contract.account.accountId,
     });
+
     const encPasses = await contract.get_site_passwords_by_ids({
       account_id: contract.account.accountId,
       pass_ids: ids,
     });
 
     return encPasses.map((encPass) => {
-      const decoded = AES.decrypt(encPass, masterPassword).toString();
+      const decoded = AES.decrypt(encPass, masterPassword).toString(enc.Utf8);
       return JSON.parse(decoded) as SitePassword;
     });
   });
