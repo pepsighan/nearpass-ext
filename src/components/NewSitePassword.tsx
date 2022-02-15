@@ -48,7 +48,7 @@ export default function NewSitePassword() {
     async (state) => {
       await addSitePassword(state);
       onClose();
-      enqueueSnackbar('Add your password securely.', { variant: 'success' });
+      enqueueSnackbar('Added your password securely.', { variant: 'success' });
     },
     [addSitePassword, onClose]
   );
