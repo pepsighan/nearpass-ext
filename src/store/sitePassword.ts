@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useContract } from './wallet';
 import { useMasterPassword } from './master';
 import { AES, enc } from 'crypto-js';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import create from 'zustand';
 import { persist } from 'zustand/middleware';
 import indexedStorage from '../indexedStorage';
@@ -19,6 +19,7 @@ type SitePassword = {
 export function useAddSitePassword() {
   const masterPassword = useMasterPassword();
   const contract = useContract();
+  const query = useQueryClient();
 
   return useCallback(
     async (payload: SitePassword) => {
@@ -36,8 +37,11 @@ export function useAddSitePassword() {
         masterPassword
       ).toString();
       await contract.add_site_password({ enc_pass: encPass });
+
+      // Refetch the site passwords.
+      await query.invalidateQueries('all-site-passwords');
     },
-    [contract, masterPassword]
+    [query, contract, masterPassword]
   );
 }
 
