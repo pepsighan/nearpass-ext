@@ -15,6 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { materialRegister } from '../materialRegister';
 import { useAddSitePassword } from '../store/sitePassword';
 import { useSnackbar } from 'notistack';
+import { LoadingButton } from '@mui/lab';
 
 const schema = z.object({
   website: z.string().url(),
@@ -30,7 +31,7 @@ export default function NewSitePassword() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
       website: '',
@@ -89,9 +90,15 @@ export default function NewSitePassword() {
               error={Boolean(errors.password)}
               {...materialRegister(register, 'password')}
             />
-            <Button type="submit" variant="contained" size="large" fullWidth>
+            <LoadingButton
+              type="submit"
+              variant="contained"
+              size="large"
+              fullWidth
+              loading={isSubmitting}
+            >
               Save
-            </Button>
+            </LoadingButton>
           </Stack>
         </DialogContent>
       </Dialog>
