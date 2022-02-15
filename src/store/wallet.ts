@@ -7,6 +7,7 @@ import config from '../config/config';
 type NearpassContract = {
   get_account_hash(arg: { account_id: string }): Promise<string>;
   initialize_account_hash(arg: { hash: string }): Promise<void>;
+  add_site_password(arg: { enc_pass: string }): Promise<string>;
 };
 
 type UseWalletInnerStore = {
