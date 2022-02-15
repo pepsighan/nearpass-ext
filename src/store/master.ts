@@ -174,7 +174,9 @@ export function useVerifyMasterPassword() {
       const hash = await hashAccountPasswordCombination(accountId!, password);
 
       const isCorrect = hash === storedHash;
-      await setMasterPassword(password);
+      if (isCorrect) {
+        await setMasterPassword(password);
+      }
       return isCorrect;
     },
     [accountId, contract]
