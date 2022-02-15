@@ -6,6 +6,7 @@ import Passwords from './Passwords';
 import Settings from './Settings';
 import { Box } from '@mui/material';
 import ConfigureMasterPassword from './ConfigureMasterPassword';
+import AskMasterPassword from './AskMasterPassword';
 
 export default function Dashboard() {
   return (
@@ -19,6 +20,7 @@ export default function Dashboard() {
         </Routes>
       </Box>
       <ConfigureMasterPassword />
+      <AskMasterPassword />
     </>
   );
 }

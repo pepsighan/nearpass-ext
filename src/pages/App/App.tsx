@@ -1,11 +1,21 @@
 import React from 'react';
 import { ThemeProvider } from '@mui/material';
+import { SnackbarProvider } from 'notistack';
+import { HashRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
 import theme from '../../config/theme';
 import BaseStyles from '../../components/BaseStyles';
-import { HashRouter } from 'react-router-dom';
 import { useAccountId, useInitializeWallet } from '../../store/wallet';
 import Dashboard from '../../components/Dashboard';
 import NearLogin from '../../components/NearLogin';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: Infinity,
+    },
+  },
+});
 
 export default function App() {
   useInitializeWallet();
@@ -15,7 +25,11 @@ export default function App() {
     <>
       <BaseStyles />
       <ThemeProvider theme={theme}>
-        <HashRouter>{accountId ? <Dashboard /> : <NearLogin />}</HashRouter>
+        <SnackbarProvider>
+          <QueryClientProvider client={queryClient}>
+            <HashRouter>{accountId ? <Dashboard /> : <NearLogin />}</HashRouter>
+          </QueryClientProvider>
+        </SnackbarProvider>
       </ThemeProvider>
     </>
   );

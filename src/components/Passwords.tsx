@@ -1,15 +1,12 @@
-import {
-  Button,
-  Container,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  Stack,
-} from '@mui/material';
-import React from 'react';
+import { Container, Grid, Stack } from '@mui/material';
+import React, { useState } from 'react';
+import NewSitePassword from './NewSitePassword';
+import PasswordList from './PasswordList';
+import SitePasswordView from './SitePasswordView';
 
 export default function Passwords() {
+  const [currentPassIndex, setCurrentPassIndex] = useState(0);
+
   return (
     <Grid container>
       <Grid
@@ -21,21 +18,17 @@ export default function Passwords() {
           overflow: 'auto',
         }}
       >
-        <List sx={{ minWidth: 200 }}>
-          {Array(20)
-            .fill(0)
-            .map((_, index) => (
-              <ListItem key={index} button>
-                <ListItemText primary="Passwords" />
-              </ListItem>
-            ))}
-        </List>
+        <PasswordList onSelect={setCurrentPassIndex} />
       </Grid>
       <Grid item flex={1}>
         <Container>
           <Stack alignItems="flex-end" mt={2}>
-            <Button variant="contained">Add Password</Button>
+            <NewSitePassword />
           </Stack>
+          <SitePasswordView
+            key={currentPassIndex}
+            currentPassIndex={currentPassIndex}
+          />
         </Container>
       </Grid>
     </Grid>

@@ -1,10 +1,12 @@
 import create from 'zustand';
 import { useCallback, useEffect, useState } from 'react';
-import { AES, HmacSHA512 } from 'crypto-js';
+import { AES, enc, HmacSHA512 } from 'crypto-js';
 import { useAccountId, useContract, useWallet } from './wallet';
 import { persist } from 'zustand/middleware';
 import { WalletConnection } from 'near-api-js';
 import { useAsyncFn } from 'react-use';
+import networkConfig from '../config/networkConfig';
+import indexedStorage from '../indexedStorage';
 
 type UseMasterPasswordInnerStore = {
   encPassword: string | null;
@@ -19,7 +21,7 @@ const useMasterPasswordInner = create<UseMasterPasswordInnerStore>(
     (set, get) => ({
       encPassword: null,
     }),
-    { name: 'nearpass-session' }
+    { name: 'nearpass-session', getStorage: () => indexedStorage }
   )
 );
 
@@ -31,10 +33,16 @@ const appName = 'nearpass';
  * storage. The key is going to be same for an account for a login session.
  * It will change between accounts and login session.
  */
-async function getEncryptionKey(wallet: WalletConnection) {
+async function getEncryptionKeyForLocalStorage(wallet: WalletConnection) {
+  const netConf = networkConfig();
+
   const signed = await wallet
     .account()
-    .connection.signer.signMessage(new TextEncoder().encode(appName));
+    .connection.signer.signMessage(
+      new TextEncoder().encode(appName),
+      wallet.account().accountId,
+      netConf.networkId
+    );
   return new TextDecoder().decode(signed.signature);
 }
 
@@ -50,7 +58,7 @@ export function useMasterPassword() {
       return;
     }
 
-    getEncryptionKey(wallet).then(setKey);
+    getEncryptionKeyForLocalStorage(wallet).then(setKey);
   }, [wallet, setKey]);
 
   return useMasterPasswordInner(
@@ -59,7 +67,7 @@ export function useMasterPassword() {
         if (!key || !state.encPassword) {
           return null;
         }
-        return AES.decrypt(state.encPassword, key).toString();
+        return AES.decrypt(state.encPassword, key).toString(enc.Utf8);
       },
       [key]
     )
@@ -78,7 +86,7 @@ export function useSetMasterPassword() {
         throw new Error('Wallet is not initialized.');
       }
 
-      const key = await getEncryptionKey(wallet);
+      const key = await getEncryptionKeyForLocalStorage(wallet);
       const encPassword = AES.encrypt(password, key).toString();
 
       useMasterPasswordInner.setState({ encPassword });
@@ -167,7 +175,9 @@ export function useVerifyMasterPassword() {
       const hash = await hashAccountPasswordCombination(accountId!, password);
 
       const isCorrect = hash === storedHash;
-      await setMasterPassword(password);
+      if (isCorrect) {
+        await setMasterPassword(password);
+      }
       return isCorrect;
     },
     [accountId, contract]
