@@ -2,6 +2,7 @@ import { Container, Grid, Stack } from '@mui/material';
 import React, { useState } from 'react';
 import NewSitePassword from './NewSitePassword';
 import PasswordList from './PasswordList';
+import SitePasswordView from './SitePasswordView';
 
 export default function Passwords() {
   const [currentPassIndex, setCurrentPassIndex] = useState(0);
@@ -24,6 +25,10 @@ export default function Passwords() {
           <Stack alignItems="flex-end" mt={2}>
             <NewSitePassword />
           </Stack>
+          <SitePasswordView
+            key={currentPassIndex}
+            currentPassIndex={currentPassIndex}
+          />
         </Container>
       </Grid>
     </Grid>
