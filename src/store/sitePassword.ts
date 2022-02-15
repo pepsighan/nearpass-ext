@@ -93,9 +93,11 @@ export function useAllSitePasswords() {
     }
   );
 
+  // Fetch for the first time the contract and password become available.
   useEffect(() => {
-    query.refetch();
-    // Refetch whenever the contract and password change.
+    if ((query.data?.length ?? 0) === 0) {
+      query.refetch();
+    }
   }, [contract, masterPassword]);
 
   return query;
