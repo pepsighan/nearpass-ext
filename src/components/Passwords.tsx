@@ -1,5 +1,4 @@
 import {
-  Button,
   Container,
   Grid,
   List,
@@ -8,6 +7,7 @@ import {
   Stack,
 } from '@mui/material';
 import React from 'react';
+import NewSitePassword from './NewSitePassword';
 
 export default function Passwords() {
   return (
@@ -34,7 +34,7 @@ export default function Passwords() {
       <Grid item flex={1}>
         <Container>
           <Stack alignItems="flex-end" mt={2}>
-            <Button variant="contained">Add Password</Button>
+            <NewSitePassword />
           </Stack>
         </Container>
       </Grid>
