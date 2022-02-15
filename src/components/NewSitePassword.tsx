@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { materialRegister } from '../materialRegister';
+import { useAddSitePassword } from '../store/sitePassword';
 
 const schema = z.object({
   website: z.string().url(),
@@ -38,7 +39,14 @@ export default function NewSitePassword() {
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = useCallback((state) => {}, []);
+  const addSitePassword = useAddSitePassword();
+  const onSubmit = useCallback(
+    async (state) => {
+      await addSitePassword(state);
+      onClose();
+    },
+    [addSitePassword, onClose]
+  );
 
   return (
     <>
