@@ -14,6 +14,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { materialRegister } from '../materialRegister';
 import { useAddSitePassword } from '../store/sitePassword';
+import { useSnackbar } from 'notistack';
 
 const schema = z.object({
   website: z.string().url(),
@@ -39,11 +40,14 @@ export default function NewSitePassword() {
     resolver: zodResolver(schema),
   });
 
+  const { enqueueSnackbar } = useSnackbar();
+
   const addSitePassword = useAddSitePassword();
   const onSubmit = useCallback(
     async (state) => {
       await addSitePassword(state);
       onClose();
+      enqueueSnackbar('Add your password securely.', { variant: 'success' });
     },
     [addSitePassword, onClose]
   );
