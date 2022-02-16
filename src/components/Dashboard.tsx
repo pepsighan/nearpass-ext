@@ -7,10 +7,15 @@ import Settings from './Settings';
 import { Box } from '@mui/material';
 import ConfigureMasterPassword from './ConfigureMasterPassword';
 import AskMasterPassword from './AskMasterPassword';
+import { Helmet } from 'react-helmet';
 
 export default function Dashboard() {
   return (
     <>
+      <Helmet>
+        <title>Nearpass</title>
+      </Helmet>
+
       <Sidebar />
       <Navigation />
       <Box ml={`${drawerWidth}px`}>
