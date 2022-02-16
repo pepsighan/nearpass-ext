@@ -58,6 +58,9 @@ export function useMasterPassword() {
       return;
     }
 
+    // Get the key on first load as well.
+    getEncryptionKeyForLocalStorage(wallet).then(setKey);
+
     // The key changes if the account changes. And passwords change when
     // accounts change.
     return useMasterPasswordInner.subscribe(async () => {
