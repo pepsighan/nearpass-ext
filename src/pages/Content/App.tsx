@@ -1,10 +1,14 @@
-import { Typography } from '@mui/material';
+import { ThemeProvider } from '@mui/material';
 import React from 'react';
+import theme from '../../config/theme';
+import EmailSuggestion from '../../components/EmailSuggestion';
 
 export default function App() {
   return (
     <>
-      <Typography>Hello World</Typography>
+      <ThemeProvider theme={theme}>
+        <EmailSuggestion />
+      </ThemeProvider>
     </>
   );
 }
