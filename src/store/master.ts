@@ -6,7 +6,7 @@ import { persist } from 'zustand/middleware';
 import { WalletConnection } from 'near-api-js';
 import { useAsyncFn } from 'react-use';
 import networkConfig from '../config/networkConfig';
-import indexedStorage from '../indexedStorage';
+import { zustandStorage } from '../extensionStorage';
 
 type UseMasterPasswordInnerStore = {
   encPassword: string | null;
@@ -21,7 +21,7 @@ const useMasterPasswordInner = create<UseMasterPasswordInnerStore>(
     (set, get) => ({
       encPassword: null,
     }),
-    { name: 'nearpass-session', getStorage: () => indexedStorage }
+    { name: 'nearpass-session', getStorage: () => zustandStorage }
   )
 );
 

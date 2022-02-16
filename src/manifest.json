@@ -40,5 +40,6 @@
       ],
       "matches": ["https://wallet.testnet.near.org/*"]
     }
-  ]
+  ],
+  "permissions": ["storage"]
 }
