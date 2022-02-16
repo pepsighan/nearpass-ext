@@ -216,3 +216,13 @@ export function useIsMasterPasswordIsConfigured() {
 
   return obj;
 }
+
+/**
+ * Removes the master password from the state and storage. Used during
+ * logout.
+ */
+export function useForgetMasterPassword() {
+  return useCallback(() => {
+    useMasterPasswordInner.setState({ encPassword: null });
+  }, []);
+}

@@ -3,6 +3,7 @@ import { useCallback, useEffect } from 'react';
 import { connect, Contract, keyStores, WalletConnection } from 'near-api-js';
 import networkConfig from '../config/networkConfig';
 import config from '../config/config';
+import { useForgetMasterPassword } from './master';
 
 type NearpassContract = {
   get_account_hash(arg: { account_id: string }): Promise<string>;
@@ -113,6 +114,7 @@ export function useLogin() {
  */
 export function useLogout() {
   const wallet = useWallet();
+  const forgetMasterPassword = useForgetMasterPassword();
 
   return useCallback(() => {
     if (!wallet) {
@@ -120,6 +122,7 @@ export function useLogout() {
     }
 
     wallet.signOut();
+    forgetMasterPassword();
     useWalletInner.setState({ accountId: null });
   }, [wallet]);
 }
