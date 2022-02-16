@@ -4,6 +4,8 @@ import { useMasterPassword } from './master';
 import { AES, enc } from 'crypto-js';
 import { useQuery, useQueryClient } from 'react-query';
 import create from 'zustand';
+import { persist } from 'zustand/middleware';
+import { zustandStorage } from '../extensionStorage';
 
 type SitePassword = {
   website: string;
@@ -50,9 +52,14 @@ type UseAllSitePasswordsInnerStore = {
 /**
  * This is used for caching purposes only.
  */
-const useAllSitePasswordsInner = create<UseAllSitePasswordsInnerStore>(() => ({
-  passwords: [],
-}));
+const useAllSitePasswordsInner = create<UseAllSitePasswordsInnerStore>(
+  persist(
+    (set, get) => ({
+      passwords: [],
+    }),
+    { name: 'site-passwords', getStorage: () => zustandStorage }
+  )
+);
 
 /**
  * Gets all the site passwords of the user.
@@ -60,10 +67,13 @@ const useAllSitePasswordsInner = create<UseAllSitePasswordsInnerStore>(() => ({
 export function useAllSitePasswords() {
   const contract = useContract();
   const masterPassword = useMasterPassword();
+  const storedPasswords = useAllSitePasswordsInner(
+    useCallback((state) => state.passwords, [])
+  );
 
   const query = useQuery('all-site-passwords', async () => {
     if (!contract || !masterPassword) {
-      return [];
+      return null;
     }
 
     const ids = await contract.get_all_site_password_ids({
@@ -91,5 +101,12 @@ export function useAllSitePasswords() {
     }
   }, [contract, masterPassword]);
 
-  return query;
+  return {
+    ...query,
+    // Load the data from cache until it is available from upstream.
+    data:
+      query.isLoading || query.isRefetching
+        ? storedPasswords
+        : query.data ?? [],
+  };
 }
