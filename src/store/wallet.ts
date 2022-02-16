@@ -1,9 +1,10 @@
 import create from 'zustand';
 import { useCallback, useEffect } from 'react';
-import { connect, Contract, keyStores, WalletConnection } from 'near-api-js';
+import { connect, Contract, WalletConnection } from 'near-api-js';
 import networkConfig from '../config/networkConfig';
 import config from '../config/config';
 import { useForgetMasterPassword } from './master';
+import { ExtensionKeyStore } from '../extensionStorage';
 
 type NearpassContract = {
   get_account_hash(arg: { account_id: string }): Promise<string>;
@@ -63,7 +64,7 @@ export function useInitializeWallet() {
 
       const near = await connect({
         ...netConf,
-        deps: { keyStore: new keyStores.BrowserLocalStorageKeyStore() },
+        deps: { keyStore: new ExtensionKeyStore() },
       });
 
       const wallet = new WalletConnection(near, 'nearpass');
