@@ -58,7 +58,12 @@ export function useMasterPassword() {
       return;
     }
 
-    getEncryptionKeyForLocalStorage(wallet).then(setKey);
+    // The key changes if the account changes. And passwords change when
+    // accounts change.
+    return useMasterPasswordInner.subscribe(async () => {
+      const key = await getEncryptionKeyForLocalStorage(wallet);
+      setKey(key);
+    });
   }, [wallet, setKey]);
 
   return useMasterPasswordInner(
@@ -185,9 +190,10 @@ export function useVerifyMasterPassword() {
 }
 
 /**
- * Gets if the user has configured master password.
+ * Gets the user's account hash which only exists if the user has set a
+ * master password.
  */
-export function useIsMasterPasswordIsConfigured() {
+export function useGetAccountHash() {
   const contract = useContract();
 
   const obj = useAsyncFn(async () => {

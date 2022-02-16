@@ -1,5 +1,5 @@
 import {
-  useIsMasterPasswordIsConfigured,
+  useGetAccountHash,
   useMasterPassword,
   useVerifyMasterPassword,
 } from '../store/master';
@@ -16,7 +16,7 @@ import { materialRegister } from '../materialRegister';
 import { LoadingButton } from '@mui/lab';
 
 export default function AskMasterPassword() {
-  const [{ value, loading }] = useIsMasterPasswordIsConfigured();
+  const [{ value: hash, loading }] = useGetAccountHash();
   const isPasswordPresent = Boolean(useMasterPassword());
 
   const {
@@ -42,7 +42,7 @@ export default function AskMasterPassword() {
   );
 
   return (
-    <Dialog open={!loading && Boolean(value) && !isPasswordPresent}>
+    <Dialog open={!loading && Boolean(hash) && !isPasswordPresent}>
       <DialogTitle>Unlock Nearpass</DialogTitle>
 
       <DialogContent>

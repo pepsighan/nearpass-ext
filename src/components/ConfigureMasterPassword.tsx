@@ -9,7 +9,7 @@ import {
 import { LoadingButton } from '@mui/lab';
 import React, { useCallback } from 'react';
 import {
-  useIsMasterPasswordIsConfigured,
+  useGetAccountHash,
   useSecurelyStoreMasterPassword,
 } from '../store/master';
 import { useForm } from 'react-hook-form';
@@ -28,7 +28,7 @@ const schema = z
   });
 
 export default function ConfigureMasterPassword() {
-  const [{ value, loading }, refetch] = useIsMasterPasswordIsConfigured();
+  const [{ value, loading }, refetch] = useGetAccountHash();
   const {
     register,
     formState: { errors, isSubmitting },
