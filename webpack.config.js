@@ -51,7 +51,7 @@ const options = {
     contentScript: path.join(__dirname, 'src', 'pages', 'Content', 'index.tsx'),
   },
   chromeExtensionBoilerplate: {
-    notHotReload: ['background', 'contentScript', 'devtools'],
+    notHotReload: ['background'],
   },
   output: {
     filename: '[name].bundle.js',
@@ -62,32 +62,9 @@ const options = {
   module: {
     rules: [
       {
-        // look for .css or .scss files
-        test: /\.(css|scss)$/,
-        // in the `src` directory
-        use: [
-          {
-            loader: 'style-loader',
-          },
-          {
-            loader: 'css-loader',
-          },
-          {
-            loader: 'sass-loader',
-            options: {
-              sourceMap: true,
-            },
-          },
-        ],
-      },
-      {
         test: new RegExp('.(' + fileExtensions.join('|') + ')$'),
         type: 'asset/resource',
         exclude: /node_modules/,
-        // loader: 'file-loader',
-        // options: {
-        //   name: '[name].[ext]',
-        // },
       },
       {
         test: /\.html$/,
@@ -113,7 +90,7 @@ const options = {
     alias: alias,
     extensions: fileExtensions
       .map((extension) => '.' + extension)
-      .concat(['.js', '.jsx', '.ts', '.tsx', '.css']),
+      .concat(['.js', '.jsx', '.ts', '.tsx']),
   },
   plugins: [
     new CleanWebpackPlugin({ verbose: false }),
