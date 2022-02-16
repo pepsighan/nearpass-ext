@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useContract } from './wallet';
 import { useMasterPassword } from './master';
 import { AES, enc } from 'crypto-js';
@@ -46,7 +46,7 @@ export function useAddSitePassword() {
 }
 
 type UseAllSitePasswordsInnerStore = {
-  passwords: SitePassword[];
+  encPasswords: string[];
 };
 
 /**
@@ -55,7 +55,7 @@ type UseAllSitePasswordsInnerStore = {
 const useAllSitePasswordsInner = create<UseAllSitePasswordsInnerStore>(
   persist(
     (set, get) => ({
-      passwords: [],
+      encPasswords: [],
     }),
     { name: 'site-passwords', getStorage: () => zustandStorage }
   )
@@ -67,8 +67,8 @@ const useAllSitePasswordsInner = create<UseAllSitePasswordsInnerStore>(
 export function useAllSitePasswords() {
   const contract = useContract();
   const masterPassword = useMasterPassword();
-  const storedPasswords = useAllSitePasswordsInner(
-    useCallback((state) => state.passwords, [])
+  const storedEncPasses = useAllSitePasswordsInner(
+    useCallback((state) => state.encPasswords, [])
   );
 
   const query = useQuery('all-site-passwords', async () => {
@@ -85,13 +85,8 @@ export function useAllSitePasswords() {
       pass_ids: ids,
     });
 
-    const passwords = encPasses.map((encPass) => {
-      const decoded = AES.decrypt(encPass, masterPassword).toString(enc.Utf8);
-      return JSON.parse(decoded) as SitePassword;
-    });
-
-    useAllSitePasswordsInner.setState({ passwords });
-    return passwords;
+    useAllSitePasswordsInner.setState({ encPasswords: encPasses });
+    return encPasses;
   });
 
   // Fetch for the first time the contract and password become available.
@@ -101,12 +96,25 @@ export function useAllSitePasswords() {
     }
   }, [contract, masterPassword]);
 
+  const data = useMemo(() => {
+    if (!masterPassword) {
+      return [];
+    }
+
+    // Load the data from cache until it is available from upstream.
+    const allPasses =
+      query.isLoading || query.isRefetching
+        ? storedEncPasses
+        : query.data ?? [];
+
+    return allPasses.map((encPass) => {
+      const decoded = AES.decrypt(encPass, masterPassword).toString(enc.Utf8);
+      return JSON.parse(decoded) as SitePassword;
+    });
+  }, [query, storedEncPasses, masterPassword]);
+
   return {
     ...query,
-    // Load the data from cache until it is available from upstream.
-    data:
-      query.isLoading || query.isRefetching
-        ? storedPasswords
-        : query.data ?? [],
+    data,
   };
 }
