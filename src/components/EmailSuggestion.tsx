@@ -55,7 +55,9 @@ export default function EmailSuggestion() {
             <ListItem
               key={index}
               button
-              onClick={() => console.log('clicked here')}
+              onClick={() => {
+                anchorEl.value = it;
+              }}
             >
               <ListItemText>{it}</ListItemText>
             </ListItem>
