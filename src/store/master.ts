@@ -6,7 +6,7 @@ import { persist } from 'zustand/middleware';
 import { WalletConnection } from 'near-api-js';
 import { useAsyncFn } from 'react-use';
 import networkConfig from '../config/networkConfig';
-import indexedStorage from '../indexedStorage';
+import { zustandStorage } from '../extensionStorage';
 
 type UseMasterPasswordInnerStore = {
   encPassword: string | null;
@@ -21,7 +21,7 @@ const useMasterPasswordInner = create<UseMasterPasswordInnerStore>(
     (set, get) => ({
       encPassword: null,
     }),
-    { name: 'nearpass-session', getStorage: () => indexedStorage }
+    { name: 'nearpass-session', getStorage: () => zustandStorage }
   )
 );
 
@@ -58,7 +58,15 @@ export function useMasterPassword() {
       return;
     }
 
+    // Get the key on first load as well.
     getEncryptionKeyForLocalStorage(wallet).then(setKey);
+
+    // The key changes if the account changes. And passwords change when
+    // accounts change.
+    return useMasterPasswordInner.subscribe(async () => {
+      const key = await getEncryptionKeyForLocalStorage(wallet);
+      setKey(key);
+    });
   }, [wallet, setKey]);
 
   return useMasterPasswordInner(
@@ -185,9 +193,10 @@ export function useVerifyMasterPassword() {
 }
 
 /**
- * Gets if the user has configured master password.
+ * Gets the user's account hash which only exists if the user has set a
+ * master password.
  */
-export function useIsMasterPasswordIsConfigured() {
+export function useGetAccountHash() {
   const contract = useContract();
 
   const obj = useAsyncFn(async () => {
@@ -215,4 +224,14 @@ export function useIsMasterPasswordIsConfigured() {
   }, [contract]);
 
   return obj;
+}
+
+/**
+ * Removes the master password from the state and storage. Used during
+ * logout.
+ */
+export function useForgetMasterPassword() {
+  return useCallback(() => {
+    useMasterPasswordInner.setState({ encPassword: null });
+  }, []);
 }

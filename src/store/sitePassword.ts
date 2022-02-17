@@ -1,13 +1,13 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useContract } from './wallet';
 import { useMasterPassword } from './master';
 import { AES, enc } from 'crypto-js';
 import { useQuery, useQueryClient } from 'react-query';
 import create from 'zustand';
 import { persist } from 'zustand/middleware';
-import indexedStorage from '../indexedStorage';
+import { zustandStorage } from '../extensionStorage';
 
-type SitePassword = {
+export type SitePassword = {
   website: string;
   username: string;
   password: string;
@@ -46,7 +46,7 @@ export function useAddSitePassword() {
 }
 
 type UseAllSitePasswordsInnerStore = {
-  passwords: SitePassword[];
+  encPasswords: string[];
 };
 
 /**
@@ -55,9 +55,9 @@ type UseAllSitePasswordsInnerStore = {
 const useAllSitePasswordsInner = create<UseAllSitePasswordsInnerStore>(
   persist(
     (set, get) => ({
-      passwords: [],
+      encPasswords: [],
     }),
-    { name: 'nearpass-sites', getStorage: () => indexedStorage }
+    { name: 'site-passwords', getStorage: () => zustandStorage }
   )
 );
 
@@ -67,35 +67,27 @@ const useAllSitePasswordsInner = create<UseAllSitePasswordsInnerStore>(
 export function useAllSitePasswords() {
   const contract = useContract();
   const masterPassword = useMasterPassword();
-
-  const query = useQuery(
-    'all-site-passwords',
-    async () => {
-      if (!contract || !masterPassword) {
-        return [];
-      }
-
-      const ids = await contract.get_all_site_password_ids({
-        account_id: contract.account.accountId,
-      });
-
-      const encPasses = await contract.get_site_passwords_by_ids({
-        account_id: contract.account.accountId,
-        pass_ids: ids,
-      });
-
-      const passwords = encPasses.map((encPass) => {
-        const decoded = AES.decrypt(encPass, masterPassword).toString(enc.Utf8);
-        return JSON.parse(decoded) as SitePassword;
-      });
-
-      useAllSitePasswordsInner.setState({ passwords });
-      return passwords;
-    },
-    {
-      initialData: () => useAllSitePasswordsInner.getState().passwords,
-    }
+  const storedEncPasses = useAllSitePasswordsInner(
+    useCallback((state) => state.encPasswords, [])
   );
+
+  const query = useQuery('all-site-passwords', async () => {
+    if (!contract || !masterPassword) {
+      return null;
+    }
+
+    const ids = await contract.get_all_site_password_ids({
+      account_id: contract.account.accountId,
+    });
+
+    const encPasses = await contract.get_site_passwords_by_ids({
+      account_id: contract.account.accountId,
+      pass_ids: ids,
+    });
+
+    useAllSitePasswordsInner.setState({ encPasswords: encPasses });
+    return encPasses;
+  });
 
   // Fetch for the first time the contract and password become available.
   useEffect(() => {
@@ -104,5 +96,25 @@ export function useAllSitePasswords() {
     }
   }, [contract, masterPassword]);
 
-  return query;
+  const data: SitePassword[] = useMemo(() => {
+    if (!masterPassword) {
+      return [];
+    }
+
+    // Load the data from cache until it is available from upstream.
+    const allPasses =
+      query.isLoading || query.isRefetching
+        ? storedEncPasses
+        : query.data ?? [];
+
+    return allPasses.map((encPass) => {
+      const decoded = AES.decrypt(encPass, masterPassword).toString(enc.Utf8);
+      return JSON.parse(decoded) as SitePassword;
+    });
+  }, [query, storedEncPasses, masterPassword]);
+
+  return {
+    ...query,
+    data,
+  };
 }

@@ -21,9 +21,6 @@
       ],
       "js": [
         "contentScript.bundle.js"
-      ],
-      "css": [
-        "content.styles.css"
       ]
     }
   ],
@@ -43,5 +40,6 @@
       ],
       "matches": ["https://wallet.testnet.near.org/*"]
     }
-  ]
+  ],
+  "permissions": ["storage"]
 }

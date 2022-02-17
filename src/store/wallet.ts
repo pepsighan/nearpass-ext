@@ -1,8 +1,10 @@
 import create from 'zustand';
 import { useCallback, useEffect } from 'react';
-import { connect, Contract, keyStores, WalletConnection } from 'near-api-js';
+import { connect, Contract, WalletConnection } from 'near-api-js';
 import networkConfig from '../config/networkConfig';
 import config from '../config/config';
+import { useForgetMasterPassword } from './master';
+import { ExtensionKeyStore } from '../extensionStorage';
 
 type NearpassContract = {
   get_account_hash(arg: { account_id: string }): Promise<string>;
@@ -62,10 +64,13 @@ export function useInitializeWallet() {
 
       const near = await connect({
         ...netConf,
-        deps: { keyStore: new keyStores.BrowserLocalStorageKeyStore() },
+        keyStore: new ExtensionKeyStore(),
       });
 
-      const wallet = new WalletConnection(near, 'nearpass');
+      const wallet = await WalletConnection.createWithChromeStorage(
+        near,
+        'nearpass'
+      );
       // Get the current logged in account id. If not authorized it is empty.
       const accountId = wallet.getAccountId();
       // Create an instance of the contract.
@@ -113,13 +118,16 @@ export function useLogin() {
  */
 export function useLogout() {
   const wallet = useWallet();
+  const forgetMasterPassword = useForgetMasterPassword();
 
-  return useCallback(() => {
+  return useCallback(async () => {
     if (!wallet) {
       throw new Error('Wallet is not initialized yet');
     }
 
     wallet.signOut();
+    forgetMasterPassword();
     useWalletInner.setState({ accountId: null });
+    await chrome.storage.local.clear();
   }, [wallet]);
 }
