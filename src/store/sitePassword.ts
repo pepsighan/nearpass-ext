@@ -7,7 +7,7 @@ import create from 'zustand';
 import { persist } from 'zustand/middleware';
 import { zustandStorage } from '../extensionStorage';
 
-type SitePassword = {
+export type SitePassword = {
   website: string;
   username: string;
   password: string;

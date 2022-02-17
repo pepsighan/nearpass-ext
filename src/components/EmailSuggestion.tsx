@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { List, ListItem, ListItemText, Paper, Popper } from '@mui/material';
+import { SitePassword, useAllSitePasswords } from '../store/sitePassword';
 
 export default function EmailSuggestion() {
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -32,13 +33,21 @@ export default function EmailSuggestion() {
     };
   }, [setAnchorEl]);
 
+  const { data } = useAllSitePasswords();
+
   return (
     <Popper open={open} anchorEl={anchorEl}>
       <Paper>
         <List sx={{ width: anchorEl?.clientWidth }}>
-          <ListItem button onClick={() => console.log('clicked here')}>
-            <ListItemText>Username</ListItemText>
-          </ListItem>
+          {(data ?? []).map((it: SitePassword, index) => (
+            <ListItem
+              key={index}
+              button
+              onClick={() => console.log('clicked here')}
+            >
+              <ListItemText>{it.username}</ListItemText>
+            </ListItem>
+          ))}
         </List>
       </Paper>
     </Popper>
