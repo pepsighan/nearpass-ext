@@ -96,7 +96,7 @@ export function useAllSitePasswords() {
     }
   }, [contract, masterPassword]);
 
-  const data = useMemo(() => {
+  const data: SitePassword[] = useMemo(() => {
     if (!masterPassword) {
       return [];
     }

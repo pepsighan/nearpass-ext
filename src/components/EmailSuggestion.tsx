@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { List, ListItem, ListItemText, Paper, Popper } from '@mui/material';
-import { SitePassword, useAllSitePasswords } from '../store/sitePassword';
+import { useAllSitePasswords } from '../store/sitePassword';
 
 export default function EmailSuggestion() {
   const [anchorEl, setAnchorEl] = useState<any>(null);
@@ -34,18 +34,30 @@ export default function EmailSuggestion() {
   }, [setAnchorEl]);
 
   const { data } = useAllSitePasswords();
+  const usernames = useMemo(
+    () =>
+      data
+        .filter((it) => {
+          const hostname = new URL(it.website).hostname;
+          const currentHost = window.location.hostname;
+
+          return hostname === currentHost;
+        })
+        .map((it) => it.username),
+    [data]
+  );
 
   return (
-    <Popper open={open} anchorEl={anchorEl}>
+    <Popper open={open && usernames.length > 0} anchorEl={anchorEl}>
       <Paper>
         <List sx={{ width: anchorEl?.clientWidth }}>
-          {(data ?? []).map((it: SitePassword, index) => (
+          {usernames.map((it, index) => (
             <ListItem
               key={index}
               button
               onClick={() => console.log('clicked here')}
             >
-              <ListItemText>{it.username}</ListItemText>
+              <ListItemText>{it}</ListItemText>
             </ListItem>
           ))}
         </List>
