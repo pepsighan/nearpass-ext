@@ -1,7 +1,7 @@
 import { ThemeProvider } from '@mui/material';
 import React from 'react';
 import theme from '../../config/theme';
-import EmailSuggestion from '../../components/EmailSuggestion';
+import UsernameSuggestion from '../../components/UsernameSuggestion';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { useInitializeWallet } from '../../store/wallet';
 
@@ -19,7 +19,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
-        <EmailSuggestion />
+        <UsernameSuggestion />
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { List, ListItem, ListItemText, Paper, Popper } from '@mui/material';
 import { useAllSitePasswords } from '../store/sitePassword';
 
-export default function EmailSuggestion() {
+export default function UsernameSuggestion() {
   const [anchorEl, setAnchorEl] = useState<any>(null);
   const open = Boolean(anchorEl);
 
