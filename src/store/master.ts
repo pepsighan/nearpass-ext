@@ -124,7 +124,7 @@ export function usePublicKey() {
 
   return useMemo(
     () => (pKey ? pki.publicKeyFromPem(pki.privateKeyToPem(pKey)) : null),
-    []
+    [pKey]
   );
 }
 
