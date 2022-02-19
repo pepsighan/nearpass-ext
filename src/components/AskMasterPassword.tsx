@@ -87,6 +87,8 @@ export default function AskMasterPassword() {
             autoComplete="off"
             helperText={errors.privateKeyPem?.message}
             error={Boolean(errors.privateKeyPem)}
+            multiline
+            minRows={4}
             sx={{ mt: 2 }}
             {...materialRegister(register, 'privateKeyPem')}
           />
