@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useAllSitePasswords, useDeletePassword } from '../store/sitePassword';
 import {
   Container,
@@ -27,11 +27,9 @@ export default function SitePasswordView({
 
   const { enqueueSnackbar } = useSnackbar();
   const deletePassword = useDeletePassword();
-  const [{ loading }, onDelete] = useAsyncFn(async () => {
-    if (!sure) {
-      setSure(true);
-    }
 
+  const onConfirm = useCallback(() => setSure(true), []);
+  const [{ loading }, onDelete] = useAsyncFn(async () => {
     await deletePassword(item.id);
     enqueueSnackbar('Successfully deleted your password.', {
       variant: 'success',
@@ -67,7 +65,7 @@ export default function SitePasswordView({
           <LoadingButton
             variant="contained"
             color="error"
-            onClick={onDelete}
+            onClick={sure ? onDelete : onConfirm}
             loading={loading}
           >
             {sure ? 'Are you sure?' : 'Delete Password'}

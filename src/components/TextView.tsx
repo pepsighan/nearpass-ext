@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Container,
   IconButton,
@@ -25,11 +25,9 @@ export default function TextView({ currentTextIndex }: TextViewProps) {
 
   const { enqueueSnackbar } = useSnackbar();
   const deleteText = useDeleteText();
-  const [{ loading }, onDelete] = useAsyncFn(async () => {
-    if (!sure) {
-      setSure(true);
-    }
 
+  const onConfirm = useCallback(() => setSure(true), []);
+  const [{ loading }, onDelete] = useAsyncFn(async () => {
     await deleteText(item.id);
     enqueueSnackbar('Successfully deleted your text.', { variant: 'success' });
   }, [sure, setSure, item, deleteText, enqueueSnackbar]);
@@ -59,7 +57,7 @@ export default function TextView({ currentTextIndex }: TextViewProps) {
           <LoadingButton
             variant="contained"
             color="error"
-            onClick={onDelete}
+            onClick={sure ? onDelete : onConfirm}
             loading={loading}
           >
             {sure ? 'Are you sure?' : 'Delete Text'}
