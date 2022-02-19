@@ -17,6 +17,12 @@ type NearpassContract = {
     account_id: string;
     pass_ids: number[];
   }): Promise<string[]>;
+  add_text(arg: { enc_text: string }): Promise<string>;
+  get_all_text_ids(arg: { account_id: string }): Promise<number[] | null>;
+  get_texts_by_ids(arg: {
+    account_id: string;
+    text_ids: number[];
+  }): Promise<string[]>;
 };
 
 type UseWalletInnerStore = {
@@ -82,12 +88,18 @@ export function useInitializeWallet() {
           'get_site_password',
           'get_all_site_password_ids',
           'get_site_passwords_by_ids',
+          'get_text',
+          'get_all_text_ids',
+          'get_texts_by_ids',
         ],
         changeMethods: [
           'initialize_account_signature',
           'add_site_password',
           'update_site_password',
           'delete_site_password',
+          'add_text',
+          'update_text',
+          'delete_text',
         ],
       });
 

@@ -7,11 +7,13 @@ import {
   Toolbar,
 } from '@mui/material';
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export const drawerWidth = 240;
 
 export default function Sidebar() {
+  const { pathname } = useLocation();
+
   return (
     <Drawer
       sx={{
@@ -28,11 +30,16 @@ export default function Sidebar() {
       <Toolbar />
       <Divider sx={{ mt: '-1px' }} />
       <List>
-        <ListItem button component={Link} to="/">
+        <ListItem button component={Link} to="/" selected={pathname === '/'}>
           <ListItemText primary="Passwords" />
         </ListItem>
-        <ListItem button component={Link} to="/settings">
-          <ListItemText primary="Settings" />
+        <ListItem
+          button
+          component={Link}
+          to="/texts"
+          selected={pathname === '/texts'}
+        >
+          <ListItemText primary="Texts" />
         </ListItem>
       </List>
     </Drawer>
