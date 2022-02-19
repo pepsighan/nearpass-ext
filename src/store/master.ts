@@ -1,15 +1,17 @@
 import create from 'zustand';
 import { useCallback, useEffect, useState } from 'react';
-import { AES, enc, HmacSHA512 } from 'crypto-js';
+import { AES, enc } from 'crypto-js';
 import { useAccountId, useContract, useWallet } from './wallet';
 import { persist } from 'zustand/middleware';
 import { WalletConnection } from 'near-api-js';
 import { useAsyncFn } from 'react-use';
+import { md, pki } from 'node-forge';
 import networkConfig from '../config/networkConfig';
 import { zustandStorage } from '../extensionStorage';
 
 type UseMasterPasswordInnerStore = {
   encPassword: string | null;
+  encPrivateKey: string | null;
 };
 
 /**
@@ -20,6 +22,7 @@ const useMasterPasswordInner = create<UseMasterPasswordInnerStore>(
   persist(
     (set, get) => ({
       encPassword: null,
+      encPrivateKey: null,
     }),
     { name: 'nearpass-session', getStorage: () => zustandStorage }
   )
@@ -83,41 +86,45 @@ export function useMasterPassword() {
 }
 
 /**
- * Sets master password.
+ * Sets master password and the private key for encryption.
  */
 function useSetMasterPassword() {
   const wallet = useWallet();
 
   return useCallback(
-    async (password: string) => {
+    async (password: string, privateKey: string) => {
       if (!wallet) {
         throw new Error('Wallet is not initialized.');
       }
 
       const key = await getEncryptionKeyForLocalStorage(wallet);
       const encPassword = AES.encrypt(password, key).toString();
+      const encPrivateKey = AES.encrypt(privateKey, key).toString();
 
-      useMasterPasswordInner.setState({ encPassword });
+      useMasterPasswordInner.setState({ encPassword, encPrivateKey });
     },
     [wallet]
   );
 }
 
 /**
- * Create a hash for the account and password which can then be safely
- * stored in the chain. This hash is to be used to verify whether a password
- * for an account is correct or not. Since, a single master password is used to
- * encrypt all the data for an account stored on chain.
+ * Create a signatures for the account and password which can then be safely
+ * stored in the chain. This signature is to be used to verify whether a
+ * password for an account is correct or not. Since, a single master password
+ * is used to encrypt all the data for an account stored on chain.
  *
  * Creating a hash assures that no part of the actual password whatsoever is
  * stored on-chain and only its fingerprint is stored (which cannot be used
  * to recover the original).
  */
-async function hashAccountPasswordCombination(
+async function signAccountPasswordCombination(
   accountId: string,
+  privateKey: pki.rsa.PrivateKey,
   password: string
 ): Promise<string> {
-  return HmacSHA512(accountId + password, password).toString();
+  const hash = md.sha512.create();
+  hash.update(accountId + password, 'utf8');
+  return privateKey.sign(hash);
 }
 
 /**
@@ -152,11 +159,18 @@ export function useSecurelyStoreMasterPassword() {
         throw new Error('Master password is already initialized');
       }
 
-      const hash = await hashAccountPasswordCombination(accountId!, password);
+      const keyPair = await generateRSAKeyPair();
+      const privateKeyPem = pki.privateKeyToPem(keyPair.privateKey);
+
+      const hash = await signAccountPasswordCombination(
+        accountId!,
+        keyPair.privateKey,
+        password
+      );
 
       // Store the hash.
       await contract.initialize_account_hash({ hash });
-      await setMasterPassword(password);
+      await setMasterPassword(password, privateKeyPem);
     },
     [accountId, contract]
   );
@@ -180,7 +194,7 @@ export function useVerifyMasterPassword() {
       const storedHash = await contract.get_account_hash({
         account_id: accountId!,
       });
-      const hash = await hashAccountPasswordCombination(accountId!, password);
+      const hash = await signAccountPasswordCombination(accountId!, password);
 
       const isCorrect = hash === storedHash;
       if (isCorrect) {
@@ -234,4 +248,20 @@ export function useForgetMasterPassword() {
   return useCallback(() => {
     useMasterPasswordInner.setState({ encPassword: null });
   }, []);
+}
+
+/**
+ * Generates an RSA Key Pair.
+ */
+async function generateRSAKeyPair(): Promise<pki.rsa.KeyPair> {
+  return new Promise((resolve, reject) => {
+    pki.rsa.generateKeyPair({ bits: 2048, workers: 2 }, (err, keyPair) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      resolve(keyPair);
+    });
+  });
 }
