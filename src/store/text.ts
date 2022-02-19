@@ -8,6 +8,7 @@ import { zustandStorage } from '../extensionStorage';
 import { cipher, util } from 'node-forge';
 
 export type Text = {
+  id: number;
   title: string;
   content: string;
 };
@@ -47,7 +48,7 @@ export function useAddText() {
 }
 
 type UseAllTextsInnerStore = {
-  encTexts: string[];
+  encTexts: { id: number; encText: string }[];
 };
 
 /**
@@ -85,12 +86,20 @@ export function useAllTexts() {
       return [];
     }
 
-    const encTexts = await contract.get_texts_by_ids({
+    const texts = await contract.get_texts_by_ids({
       account_id: contract.account.accountId,
       text_ids: ids!,
     });
 
-    useAllTextsInner.setState({ encTexts: encTexts });
+    // Attach the ids to the texts.
+    const encTexts = texts.map((it, index) => ({
+      id: ids![index],
+      encText: it,
+    }));
+
+    useAllTextsInner.setState({
+      encTexts,
+    });
     return encTexts;
   });
 
@@ -111,13 +120,16 @@ export function useAllTexts() {
     const allPasses =
       query.isLoading || query.isRefetching ? storedEncTexts : query.data ?? [];
 
-    return allPasses.map((encText) => {
+    return allPasses.map(({ id, encText }) => {
       // Decrypt each of the text objects.
       const cipherText = cipher.createDecipher('AES-CBC', encKey.key);
       cipherText.start({ iv: encKey.iv });
       cipherText.update(util.createBuffer(util.hexToBytes(encText)));
       cipherText.finish();
-      return JSON.parse(cipherText.output.data) as Text;
+      return {
+        id,
+        ...JSON.parse(cipherText.output.data),
+      } as Text;
     });
   }, [query, encKey]);
 
