@@ -9,10 +9,7 @@ import {
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import React, { useCallback, useState } from 'react';
-import {
-  useGetAccountHash,
-  useSecurelyStoreMasterPassword,
-} from '../store/master';
+import { useGetAccountHash, useInitiateAccount } from '../store/master';
 import { useForm } from 'react-hook-form';
 import { materialRegister } from '../materialRegister';
 import { z } from 'zod';
@@ -45,15 +42,15 @@ export default function ConfigureMasterPassword() {
     resolver: zodResolver(schema),
   });
 
-  const storeMasterPassword = useSecurelyStoreMasterPassword();
-
+  const initiateAccount = useInitiateAccount();
   const onSubmit = useCallback(
     async (state) => {
-      const pem = await storeMasterPassword(state.masterPassword);
+      // TODO: Store the master password for locally.
+      const pem = await initiateAccount();
       await refetch();
       setPemText(pem);
     },
-    [storeMasterPassword, setPemText, refetch]
+    [setPemText, refetch]
   );
 
   return (
@@ -73,8 +70,7 @@ export default function ConfigureMasterPassword() {
               {...materialRegister(register, 'masterPassword')}
             />
             <Typography variant="body2" color="textSecondary" mt={1}>
-              This password will encrypt everything that you store within the
-              app. So, keep it safe otherwise your saved passwords may get lost.
+              Provide a new password for the account.
             </Typography>
 
             <TextField
@@ -86,9 +82,6 @@ export default function ConfigureMasterPassword() {
               sx={{ mt: 2 }}
               {...materialRegister(register, 'repeatPassword')}
             />
-            <Typography variant="body2" color="textSecondary" mt={1}>
-              Also, rest assured that this password won't leave your device.
-            </Typography>
 
             <LoadingButton
               type="submit"
@@ -104,7 +97,7 @@ export default function ConfigureMasterPassword() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(pemText)}>
+      <Dialog open={Boolean(pemText)} fullWidth maxWidth="xl">
         <DialogTitle>Your Private Key</DialogTitle>
         <DialogContent>
           <Typography>

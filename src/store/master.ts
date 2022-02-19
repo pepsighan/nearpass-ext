@@ -164,50 +164,49 @@ async function signAccountId(
 }
 
 /**
- * Securely store the master password such that it can be used in the process
- * of encrypting the passwords in the manager.
+ * Initiates the account on the chain and produces a private key.
  */
-export function useSecurelyStoreMasterPassword() {
+export function useInitiateAccount() {
   const accountId = useAccountId();
   const contract = useContract();
-  const setMasterPassword = useSetMasterPasswordAndPrivateKey();
+  const wallet = useWallet();
 
-  return useCallback(
-    async (password: string) => {
-      if (!contract) {
-        throw new Error('Wallet not initialized yet');
+  return useCallback(async () => {
+    if (!contract || !wallet) {
+      throw new Error('Wallet not initialized yet');
+    }
+
+    // If hash already exists, it cannot be initialized again.
+    let storedHash: string | undefined;
+    try {
+      storedHash = await contract.get_account_signature({
+        account_id: contract.account.accountId,
+      });
+    } catch (err: any) {
+      // Consume error if account hash is not initialized.
+      if (!err.toString().includes('NearpassAccountNotInitialized')) {
+        throw err;
       }
+    }
 
-      // If hash already exists, it cannot be initialized again.
-      let storedHash: string | undefined;
-      try {
-        storedHash = await contract.get_account_signature({
-          account_id: contract.account.accountId,
-        });
-      } catch (err: any) {
-        // Consume error if account hash is not initialized.
-        if (!err.toString().includes('NearpassAccountNotInitialized')) {
-          throw err;
-        }
-      }
+    if (storedHash) {
+      throw new Error('Account is already initialized');
+    }
 
-      if (storedHash) {
-        throw new Error('Master password is already initialized');
-      }
+    const keyPair = await generateRSAKeyPair();
 
-      const keyPair = await generateRSAKeyPair();
-      const privateKeyPem = pki.privateKeyToPem(keyPair.privateKey);
+    const signature = await signAccountId(accountId!, keyPair.privateKey);
+    // Store the hash.
+    await contract.initialize_account_signature({ signature });
 
-      const signature = await signAccountId(accountId!, keyPair.privateKey);
+    // Store the encrypted private key locally.
+    const key = await getEncryptionKeyForLocalStorage(wallet);
+    const privateKeyPem = pki.privateKeyToPem(keyPair.privateKey);
+    const encPrivateKey = AES.encrypt(privateKeyPem, key).toString();
+    useMasterPasswordInner.setState({ encPrivateKey });
 
-      // Store the hash.
-      await contract.initialize_account_signature({ signature });
-      await setMasterPassword(password, privateKeyPem);
-
-      return privateKeyPem;
-    },
-    [accountId, contract]
-  );
+    return privateKeyPem;
+  }, [accountId, contract]);
 }
 
 /**
