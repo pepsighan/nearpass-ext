@@ -124,7 +124,7 @@ export default function ConfigureMasterPassword() {
               borderRadius: 2,
             }}
           >
-            Hello awesome
+            {pemText}
           </Typography>
 
           <Button
