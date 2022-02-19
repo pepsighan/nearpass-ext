@@ -1,6 +1,5 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  Button,
   Container,
   IconButton,
   InputAdornment,
@@ -8,9 +7,10 @@ import {
   TextField,
 } from '@mui/material';
 import { MdRemoveRedEye } from 'react-icons/md';
-import { useBoolean } from 'react-use';
+import { useAsyncFn, useBoolean } from 'react-use';
 import { useAllTexts, useDeleteText } from '../store/text';
 import { useSnackbar } from 'notistack';
+import { LoadingButton } from '@mui/lab';
 
 type TextViewProps = {
   currentTextIndex: number;
@@ -25,7 +25,7 @@ export default function TextView({ currentTextIndex }: TextViewProps) {
 
   const { enqueueSnackbar } = useSnackbar();
   const deleteText = useDeleteText();
-  const onDelete = useCallback(async () => {
+  const [{ loading }, onDelete] = useAsyncFn(async () => {
     if (!sure) {
       setSure(true);
     }
@@ -56,9 +56,14 @@ export default function TextView({ currentTextIndex }: TextViewProps) {
               ),
             }}
           />
-          <Button variant="contained" color="error" onClick={onDelete}>
+          <LoadingButton
+            variant="contained"
+            color="error"
+            onClick={onDelete}
+            loading={loading}
+          >
             {sure ? 'Are you sure?' : 'Delete Text'}
-          </Button>
+          </LoadingButton>
         </Stack>
       </Stack>
     </Container>

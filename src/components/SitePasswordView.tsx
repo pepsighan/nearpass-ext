@@ -1,7 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { useAllSitePasswords, useDeletePassword } from '../store/sitePassword';
 import {
-  Button,
   Container,
   IconButton,
   InputAdornment,
@@ -9,8 +8,9 @@ import {
   TextField,
 } from '@mui/material';
 import { MdRemoveRedEye } from 'react-icons/md';
-import { useBoolean } from 'react-use';
+import { useAsyncFn, useBoolean } from 'react-use';
 import { useSnackbar } from 'notistack';
+import { LoadingButton } from '@mui/lab';
 
 type SitePasswordViewProps = {
   currentPassIndex: number;
@@ -27,13 +27,15 @@ export default function SitePasswordView({
 
   const { enqueueSnackbar } = useSnackbar();
   const deletePassword = useDeletePassword();
-  const onDelete = useCallback(async () => {
+  const [{ loading }, onDelete] = useAsyncFn(async () => {
     if (!sure) {
       setSure(true);
     }
 
     await deletePassword(item.id);
-    enqueueSnackbar('Successfully deleted your password.', { variant: 'success' });
+    enqueueSnackbar('Successfully deleted your password.', {
+      variant: 'success',
+    });
   }, [sure, setSure, deletePassword, enqueueSnackbar, item]);
 
   return item ? (
@@ -62,9 +64,14 @@ export default function SitePasswordView({
               ),
             }}
           />
-          <Button variant="contained" color="error" onClick={onDelete}>
+          <LoadingButton
+            variant="contained"
+            color="error"
+            onClick={onDelete}
+            loading={loading}
+          >
             {sure ? 'Are you sure?' : 'Delete Password'}
-          </Button>
+          </LoadingButton>
         </Stack>
       </Stack>
     </Container>
