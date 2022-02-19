@@ -121,6 +121,7 @@ export default function InitiateNewAccount() {
               bgcolor: 'grey.100',
               mt: 1,
               borderRadius: 2,
+              wordWrap: 'break-word',
             }}
           >
             {encKey}
