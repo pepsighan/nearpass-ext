@@ -13,82 +13,78 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { materialRegister } from '../materialRegister';
-import { useAddSitePassword } from '../store/sitePassword';
 import { useSnackbar } from 'notistack';
 import { LoadingButton } from '@mui/lab';
+import { useAddText } from '../store/text';
 
 const schema = z.object({
-  website: z.string().url(),
-  username: z.string().min(1, 'Required'),
-  password: z.string().min(1, 'Required'),
+  title: z.string().min(1, 'Required'),
+  content: z.string().min(1, 'Required'),
 });
 
 export default function NewText() {
-  const [open, toggleOpen] = useBoolean(false);
-  const onOpen = useCallback(() => toggleOpen(true), [toggleOpen]);
-  const onClose = useCallback(() => toggleOpen(false), [toggleOpen]);
-
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    reset,
   } = useForm({
     defaultValues: {
-      website: '',
-      username: '',
-      password: '',
+      title: '',
+      content: '',
     },
     resolver: zodResolver(schema),
   });
 
+  const [open, toggleOpen] = useBoolean(false);
+  const onOpen = useCallback(() => toggleOpen(true), [toggleOpen]);
+  const onClose = useCallback(() => {
+    toggleOpen(false);
+    reset();
+  }, [toggleOpen]);
+
   const { enqueueSnackbar } = useSnackbar();
 
-  const addSitePassword = useAddSitePassword();
+  const addText = useAddText();
   const onSubmit = useCallback(
     async (state) => {
-      await addSitePassword(state);
+      await addText(state);
       onClose();
-      enqueueSnackbar('Added your password securely.', { variant: 'success' });
+      enqueueSnackbar('Added your text securely.', { variant: 'success' });
     },
-    [addSitePassword, onClose]
+    [addText, onClose]
   );
 
   return (
     <>
       <Button variant="contained" onClick={onOpen}>
-        Add Password
+        Add Text
       </Button>
 
       <Dialog open={open} fullWidth onClose={onClose}>
-        <DialogTitle>New Password</DialogTitle>
+        <DialogTitle>New Text</DialogTitle>
         <DialogContent>
           <Stack component="form" spacing={2} onSubmit={handleSubmit(onSubmit)}>
             <Typography color="textSecondary">
               Fill in the form with the credentials for a website. All of this
               information is going to be stored after encrypting it by your
-              master password.
+              encryption key.
             </Typography>
             <TextField
-              label="Website"
+              label="Title"
               fullWidth
-              helperText={errors.website?.message}
-              error={Boolean(errors.website)}
-              {...materialRegister(register, 'website')}
+              helperText={errors.title?.message}
+              error={Boolean(errors.title)}
+              {...materialRegister(register, 'title')}
             />
             <TextField
-              label="Username"
+              label="Content"
               fullWidth
-              helperText={errors.username?.message}
-              error={Boolean(errors.username)}
-              {...materialRegister(register, 'username')}
-            />
-            <TextField
-              label="Password"
-              type="password"
-              fullWidth
-              helperText={errors.password?.message}
-              error={Boolean(errors.password)}
-              {...materialRegister(register, 'password')}
+              helperText={errors.content?.message}
+              error={Boolean(errors.content)}
+              multiline
+              minRows={6}
+              {...materialRegister(register, 'content')}
             />
             <LoadingButton
               type="submit"

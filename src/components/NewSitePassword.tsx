@@ -24,14 +24,11 @@ const schema = z.object({
 });
 
 export default function NewSitePassword() {
-  const [open, toggleOpen] = useBoolean(false);
-  const onOpen = useCallback(() => toggleOpen(true), [toggleOpen]);
-  const onClose = useCallback(() => toggleOpen(false), [toggleOpen]);
-
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    reset,
   } = useForm({
     defaultValues: {
       website: '',
@@ -40,6 +37,13 @@ export default function NewSitePassword() {
     },
     resolver: zodResolver(schema),
   });
+
+  const [open, toggleOpen] = useBoolean(false);
+  const onOpen = useCallback(() => toggleOpen(true), [toggleOpen]);
+  const onClose = useCallback(() => {
+    toggleOpen(false);
+    reset();
+  }, [toggleOpen]);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -66,7 +70,7 @@ export default function NewSitePassword() {
             <Typography color="textSecondary">
               Fill in the form with the credentials for a website. All of this
               information is going to be stored after encrypting it by your
-              master password.
+              encryption key.
             </Typography>
             <TextField
               label="Website"
