@@ -85,7 +85,7 @@ export function useMasterPassword() {
 /**
  * Sets master password.
  */
-export function useSetMasterPassword() {
+function useSetMasterPassword() {
   const wallet = useWallet();
 
   return useCallback(
@@ -113,7 +113,7 @@ export function useSetMasterPassword() {
  * stored on-chain and only its fingerprint is stored (which cannot be used
  * to recover the original).
  */
-export async function hashAccountPasswordCombination(
+async function hashAccountPasswordCombination(
   accountId: string,
   password: string
 ): Promise<string> {
