@@ -139,14 +139,14 @@ export function useAllSitePasswords() {
 }
 
 /**
- * Deletes a text item from the chain.
+ * Deletes a password from the chain.
  */
-export function useDeleteText() {
+export function useDeletePassword() {
   const contract = useContract();
   const query = useQueryClient();
 
   return useCallback(
-    async (passId: string) => {
+    async (passId: number) => {
       if (!contract) {
         throw new Error('Wallet is not initialized yet');
       }

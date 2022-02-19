@@ -147,7 +147,7 @@ export function useDeleteText() {
   const query = useQueryClient();
 
   return useCallback(
-    async (textId: string) => {
+    async (textId: number) => {
       if (!contract) {
         throw new Error('Wallet is not initialized yet');
       }

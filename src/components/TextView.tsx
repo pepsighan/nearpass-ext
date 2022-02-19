@@ -9,7 +9,8 @@ import {
 } from '@mui/material';
 import { MdRemoveRedEye } from 'react-icons/md';
 import { useBoolean } from 'react-use';
-import { useAllTexts } from '../store/text';
+import { useAllTexts, useDeleteText } from '../store/text';
+import { useSnackbar } from 'notistack';
 
 type TextViewProps = {
   currentTextIndex: number;
@@ -22,13 +23,16 @@ export default function TextView({ currentTextIndex }: TextViewProps) {
   const [visible, toggleVisible] = useBoolean(false);
   const [sure, setSure] = useState(false);
 
-  const onDelete = useCallback(() => {
+  const { enqueueSnackbar } = useSnackbar();
+  const deleteText = useDeleteText();
+  const onDelete = useCallback(async () => {
     if (!sure) {
       setSure(true);
     }
 
-    // TODO: Delete the text.
-  }, [sure, setSure]);
+    await deleteText(item.id);
+    enqueueSnackbar('Successfully deleted your text.', { variant: 'success' });
+  }, [sure, setSure, item, deleteText, enqueueSnackbar]);
 
   return item ? (
     <Container sx={{ mt: 8 }}>

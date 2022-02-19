@@ -17,14 +17,14 @@ type NearpassContract = {
     account_id: string;
     pass_ids: number[];
   }): Promise<string[]>;
-  delete_site_password(arg: { pass_id: string }): Promise<void>;
+  delete_site_password(arg: { pass_id: number }): Promise<void>;
   add_text(arg: { enc_text: string }): Promise<string>;
   get_all_text_ids(arg: { account_id: string }): Promise<number[] | null>;
   get_texts_by_ids(arg: {
     account_id: string;
     text_ids: number[];
   }): Promise<string[]>;
-  delete_text(arg: { text_id: string }): Promise<void>;
+  delete_text(arg: { text_id: number }): Promise<void>;
 };
 
 type UseWalletInnerStore = {

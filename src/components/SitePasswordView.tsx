@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { useAllSitePasswords } from '../store/sitePassword';
+import { useAllSitePasswords, useDeletePassword } from '../store/sitePassword';
 import {
   Button,
   Container,
@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { MdRemoveRedEye } from 'react-icons/md';
 import { useBoolean } from 'react-use';
+import { useSnackbar } from 'notistack';
 
 type SitePasswordViewProps = {
   currentPassIndex: number;
@@ -24,13 +25,16 @@ export default function SitePasswordView({
   const [visible, toggleVisible] = useBoolean(false);
   const [sure, setSure] = useState(false);
 
-  const onDelete = useCallback(() => {
+  const { enqueueSnackbar } = useSnackbar();
+  const deletePassword = useDeletePassword();
+  const onDelete = useCallback(async () => {
     if (!sure) {
       setSure(true);
     }
 
-    // TODO: Delete the password.
-  }, [sure, setSure]);
+    await deletePassword(item.id);
+    enqueueSnackbar('Successfully deleted your password.', { variant: 'success' });
+  }, [sure, setSure, deletePassword, enqueueSnackbar, item]);
 
   return item ? (
     <Container sx={{ mt: 8 }}>
