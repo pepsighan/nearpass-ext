@@ -76,13 +76,13 @@ export function useInitializeWallet() {
       // Create an instance of the contract.
       const contract = new Contract(wallet.account(), config.CONTRACT_NAME, {
         viewMethods: [
-          'get_account_hash',
+          'get_account_signature',
           'get_site_password',
           'get_all_site_password_ids',
           'get_site_passwords_by_ids',
         ],
         changeMethods: [
-          'initialize_account_hash',
+          'initialize_account_signature',
           'add_site_password',
           'update_site_password',
           'delete_site_password',
@@ -125,7 +125,7 @@ export function useLogout() {
       throw new Error('Wallet is not initialized yet');
     }
 
-    wallet.signOut();
+    await wallet.signOut();
     forgetMasterPassword();
     useWalletInner.setState({ accountId: null });
     await chrome.storage.local.clear();
