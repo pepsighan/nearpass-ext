@@ -18,21 +18,10 @@ import { materialRegister } from '../materialRegister';
 import { LoadingButton } from '@mui/lab';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { pki } from 'node-forge';
 
 const schema = z.object({
   masterPassword: z.string().min(8),
-  privateKeyPem: z.string().refine(
-    (v) => {
-      try {
-        pki.privateKeyFromPem(v);
-        return true;
-      } catch (err) {
-        return false;
-      }
-    },
-    { message: 'Invalid private key' }
-  ),
+  encKey: z.string().min(1, 'Required'),
 });
 
 export default function RestoreAccount() {
@@ -47,7 +36,7 @@ export default function RestoreAccount() {
   } = useForm({
     defaultValues: {
       masterPassword: '',
-      privateKeyPem: '',
+      encKey: '',
     },
     resolver: zodResolver(schema),
   });
@@ -56,9 +45,9 @@ export default function RestoreAccount() {
   const setMasterPassword = useSetMasterPassword();
   const onSubmit = useCallback(
     async (state) => {
-      const isCorrect = await verifyAccount(state.privateKeyPem);
+      const isCorrect = await verifyAccount(state.encKey);
       if (!isCorrect) {
-        setError('privateKeyPem', { message: 'Private key is incorrect' });
+        setError('encKey', { message: 'Encryption key is incorrect' });
         return;
       }
       await setMasterPassword(state.masterPassword);
@@ -86,17 +75,21 @@ export default function RestoreAccount() {
           </Typography>
 
           <TextField
-            label="Private key"
+            label="Encryption key"
             fullWidth
             type="text"
             autoComplete="off"
-            helperText={errors.privateKeyPem?.message}
-            error={Boolean(errors.privateKeyPem)}
+            helperText={errors.encKey?.message}
+            error={Boolean(errors.encKey)}
             multiline
             minRows={4}
             sx={{ mt: 2 }}
-            {...materialRegister(register, 'privateKeyPem')}
+            {...materialRegister(register, 'encKey')}
           />
+          <Typography variant="body2" color="textSecondary" mt={1}>
+            Your encryption key for this account. If you have forgotten, you
+            won&apos;t be able to recover your data.
+          </Typography>
 
           <LoadingButton
             type="submit"
@@ -106,7 +99,7 @@ export default function RestoreAccount() {
             loading={isSubmitting}
             sx={{ mt: 2 }}
           >
-            Unlock
+            Restore
           </LoadingButton>
         </Box>
       </DialogContent>
