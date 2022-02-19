@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from 'react-query';
 import create from 'zustand';
 import { persist } from 'zustand/middleware';
 import { zustandStorage } from '../extensionStorage';
-import { cipher, rc2, util } from 'node-forge';
+import { cipher, util } from 'node-forge';
 
 export type SitePassword = {
   website: string;
@@ -116,11 +116,11 @@ export function useAllSitePasswords() {
 
     return allPasses.map((encPass) => {
       // Decrypt each of the password objects.
-      const cipher = rc2.createDecryptionCipher(encKey.key);
-      cipher.start(encKey.iv);
-      cipher.update(util.createBuffer(util.hexToBytes(encPass)));
-      cipher.finish();
-      return JSON.parse(cipher.output.data) as SitePassword;
+      const cipherText = cipher.createDecipher('AES-CBC', encKey.key);
+      cipherText.start({ iv: encKey.iv });
+      cipherText.update(util.createBuffer(util.hexToBytes(encPass)));
+      cipherText.finish();
+      return JSON.parse(cipherText.output.data) as SitePassword;
     });
   }, [query, encKey]);
 

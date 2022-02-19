@@ -226,7 +226,7 @@ export function useInitiateAccount() {
     // Store the encryption key locally.
     await setEncKey(encKey);
 
-    return Buffer.from(JSON.stringify(encKey), 'utf8').toString('base64');
+    return Buffer.from(JSON.stringify(encKey), 'binary').toString('base64');
   }, [accountId, contract, setEncKey]);
 }
 
@@ -250,7 +250,7 @@ export function useVerifyAccount() {
       });
 
       const encKey: EncryptionKey = JSON.parse(
-        Buffer.from(baseEncKey, 'base64').toString('utf8')
+        Buffer.from(baseEncKey, 'base64').toString('binary')
       );
       const hash = await signAccountId(accountId!, encKey);
 
