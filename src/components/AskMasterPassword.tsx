@@ -14,6 +14,24 @@ import {
 } from '@mui/material';
 import { materialRegister } from '../materialRegister';
 import { LoadingButton } from '@mui/lab';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { pki } from 'node-forge';
+
+const schema = z.object({
+  masterPassword: z.string().min(8),
+  privateKeyPem: z.string().refine(
+    (v) => {
+      try {
+        pki.privateKeyFromPem(v);
+        return true;
+      } catch (err) {
+        return false;
+      }
+    },
+    { message: 'Invalid private key' }
+  ),
+});
 
 export default function AskMasterPassword() {
   const [{ value: hash, loading }] = useGetAccountHash();
@@ -27,13 +45,18 @@ export default function AskMasterPassword() {
   } = useForm({
     defaultValues: {
       masterPassword: '',
+      privateKeyPem: '',
     },
+    resolver: zodResolver(schema),
   });
 
   const verifyMasterPassword = useVerifyMasterPassword();
   const onSubmit = useCallback(
     async (state) => {
-      const isCorrect = await verifyMasterPassword(state.masterPassword);
+      const isCorrect = await verifyMasterPassword(
+        state.masterPassword,
+        state.privateKeyPem
+      );
       if (!isCorrect) {
         setError('masterPassword', { message: 'Master password is incorrect' });
       }
@@ -55,6 +78,17 @@ export default function AskMasterPassword() {
             error={Boolean(errors.masterPassword)}
             sx={{ mt: 2 }}
             {...materialRegister(register, 'masterPassword')}
+          />
+
+          <TextField
+            label="Private key PEM"
+            fullWidth
+            type="text"
+            autoComplete="off"
+            helperText={errors.privateKeyPem?.message}
+            error={Boolean(errors.privateKeyPem)}
+            sx={{ mt: 2 }}
+            {...materialRegister(register, 'privateKeyPem')}
           />
 
           <LoadingButton

@@ -185,7 +185,7 @@ export function useVerifyMasterPassword() {
   const setMasterPassword = useSetMasterPassword();
 
   return useCallback(
-    async (password: string) => {
+    async (password: string, privateKeyPem: string) => {
       if (!contract) {
         throw new Error('Wallet not initialized yet');
       }
@@ -194,11 +194,17 @@ export function useVerifyMasterPassword() {
       const storedHash = await contract.get_account_hash({
         account_id: accountId!,
       });
-      const hash = await signAccountPasswordCombination(accountId!, password);
+
+      const privateKey = pki.privateKeyFromPem(privateKeyPem);
+      const hash = await signAccountPasswordCombination(
+        accountId!,
+        privateKey,
+        password
+      );
 
       const isCorrect = hash === storedHash;
       if (isCorrect) {
-        await setMasterPassword(password);
+        await setMasterPassword(password, privateKeyPem);
       }
       return isCorrect;
     },
