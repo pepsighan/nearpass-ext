@@ -126,3 +126,25 @@ export function useAllTexts() {
     data,
   };
 }
+
+/**
+ * Deletes a text item from the chain.
+ */
+export function useDeleteText() {
+  const contract = useContract();
+  const query = useQueryClient();
+
+  return useCallback(
+    async (textId: string) => {
+      if (!contract) {
+        throw new Error('Wallet is not initialized yet');
+      }
+
+      await contract.delete_text({ text_id: textId });
+
+      // Refetch the site passwords.
+      await query.invalidateQueries('all-texts');
+    },
+    [contract]
+  );
+}

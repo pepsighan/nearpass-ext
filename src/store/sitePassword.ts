@@ -129,3 +129,25 @@ export function useAllSitePasswords() {
     data,
   };
 }
+
+/**
+ * Deletes a text item from the chain.
+ */
+export function useDeleteText() {
+  const contract = useContract();
+  const query = useQueryClient();
+
+  return useCallback(
+    async (passId: string) => {
+      if (!contract) {
+        throw new Error('Wallet is not initialized yet');
+      }
+
+      await contract.delete_site_password({ pass_id: passId });
+
+      // Refetch the site passwords.
+      await query.invalidateQueries('all-site-passwords');
+    },
+    [contract]
+  );
+}
