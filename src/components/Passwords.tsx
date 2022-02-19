@@ -18,7 +18,10 @@ export default function Passwords() {
           overflow: 'auto',
         }}
       >
-        <PasswordList onSelect={setCurrentPassIndex} />
+        <PasswordList
+          onSelect={setCurrentPassIndex}
+          currentIndex={currentPassIndex}
+        />
       </Grid>
       <Grid item flex={1}>
         <Container>
