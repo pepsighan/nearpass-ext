@@ -3,14 +3,16 @@ import { useCallback, useEffect } from 'react';
 import { connect, Contract, WalletConnection } from 'near-api-js';
 import networkConfig from '../config/networkConfig';
 import config from '../config/config';
-import { useForgetMasterPassword } from './master';
+import { useForgetAccount } from './account';
 import { ExtensionKeyStore } from '../extensionStorage';
 
 type NearpassContract = {
-  get_account_hash(arg: { account_id: string }): Promise<string>;
-  initialize_account_hash(arg: { hash: string }): Promise<void>;
+  get_account_signature(arg: { account_id: string }): Promise<string>;
+  initialize_account_signature(arg: { signature: string }): Promise<void>;
   add_site_password(arg: { enc_pass: string }): Promise<string>;
-  get_all_site_password_ids(arg: { account_id: string }): Promise<number[]>;
+  get_all_site_password_ids(arg: {
+    account_id: string;
+  }): Promise<number[] | null>;
   get_site_passwords_by_ids(arg: {
     account_id: string;
     pass_ids: number[];
@@ -76,13 +78,13 @@ export function useInitializeWallet() {
       // Create an instance of the contract.
       const contract = new Contract(wallet.account(), config.CONTRACT_NAME, {
         viewMethods: [
-          'get_account_hash',
+          'get_account_signature',
           'get_site_password',
           'get_all_site_password_ids',
           'get_site_passwords_by_ids',
         ],
         changeMethods: [
-          'initialize_account_hash',
+          'initialize_account_signature',
           'add_site_password',
           'update_site_password',
           'delete_site_password',
@@ -118,14 +120,14 @@ export function useLogin() {
  */
 export function useLogout() {
   const wallet = useWallet();
-  const forgetMasterPassword = useForgetMasterPassword();
+  const forgetMasterPassword = useForgetAccount();
 
   return useCallback(async () => {
     if (!wallet) {
       throw new Error('Wallet is not initialized yet');
     }
 
-    wallet.signOut();
+    await wallet.signOut();
     forgetMasterPassword();
     useWalletInner.setState({ accountId: null });
     await chrome.storage.local.clear();

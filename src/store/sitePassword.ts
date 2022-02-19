@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useContract } from './wallet';
-import { useMasterPassword } from './master';
-import { AES, enc } from 'crypto-js';
+import { useEncryptionKey } from './account';
 import { useQuery, useQueryClient } from 'react-query';
 import create from 'zustand';
 import { persist } from 'zustand/middleware';
 import { zustandStorage } from '../extensionStorage';
+import { cipher, util } from 'node-forge';
 
 export type SitePassword = {
   website: string;
@@ -17,7 +17,7 @@ export type SitePassword = {
  * Adds a site password.
  */
 export function useAddSitePassword() {
-  const masterPassword = useMasterPassword();
+  const encKey = useEncryptionKey();
   const contract = useContract();
   const query = useQueryClient();
 
@@ -27,21 +27,23 @@ export function useAddSitePassword() {
         throw new Error('Wallet is not initialized yet');
       }
 
-      if (!masterPassword) {
-        throw new Error('Master password is not initialized yet');
+      if (!encKey) {
+        throw new Error('Account is not initialized yet');
       }
 
+      const cipherText = cipher.createCipher('AES-CBC', encKey.key);
+      cipherText.start({ iv: encKey.iv });
+      cipherText.update(util.createBuffer(JSON.stringify(payload)));
+      cipherText.finish();
+      const encPass = cipherText.output.toHex();
+
       // Encrypt the payload JSON and store it.
-      const encPass = AES.encrypt(
-        JSON.stringify(payload),
-        masterPassword
-      ).toString();
       await contract.add_site_password({ enc_pass: encPass });
 
       // Refetch the site passwords.
       await query.invalidateQueries('all-site-passwords');
     },
-    [query, contract, masterPassword]
+    [query, contract, encKey]
   );
 }
 
@@ -66,13 +68,12 @@ const useAllSitePasswordsInner = create<UseAllSitePasswordsInnerStore>(
  */
 export function useAllSitePasswords() {
   const contract = useContract();
-  const masterPassword = useMasterPassword();
   const storedEncPasses = useAllSitePasswordsInner(
     useCallback((state) => state.encPasswords, [])
   );
 
   const query = useQuery('all-site-passwords', async () => {
-    if (!contract || !masterPassword) {
+    if (!contract) {
       return null;
     }
 
@@ -80,9 +81,14 @@ export function useAllSitePasswords() {
       account_id: contract.account.accountId,
     });
 
+    if ((ids ?? []).length === 0) {
+      useAllSitePasswordsInner.setState({ encPasswords: [] });
+      return [];
+    }
+
     const encPasses = await contract.get_site_passwords_by_ids({
       account_id: contract.account.accountId,
-      pass_ids: ids,
+      pass_ids: ids!,
     });
 
     useAllSitePasswordsInner.setState({ encPasswords: encPasses });
@@ -94,10 +100,11 @@ export function useAllSitePasswords() {
     if ((query.data?.length ?? 0) === 0) {
       query.refetch();
     }
-  }, [contract, masterPassword]);
+  }, [contract]);
 
+  const encKey = useEncryptionKey();
   const data: SitePassword[] = useMemo(() => {
-    if (!masterPassword) {
+    if (!encKey) {
       return [];
     }
 
@@ -108,10 +115,14 @@ export function useAllSitePasswords() {
         : query.data ?? [];
 
     return allPasses.map((encPass) => {
-      const decoded = AES.decrypt(encPass, masterPassword).toString(enc.Utf8);
-      return JSON.parse(decoded) as SitePassword;
+      // Decrypt each of the password objects.
+      const cipherText = cipher.createDecipher('AES-CBC', encKey.key);
+      cipherText.start({ iv: encKey.iv });
+      cipherText.update(util.createBuffer(util.hexToBytes(encPass)));
+      cipherText.finish();
+      return JSON.parse(cipherText.output.data) as SitePassword;
     });
-  }, [query, storedEncPasses, masterPassword]);
+  }, [query, encKey]);
 
   return {
     ...query,
