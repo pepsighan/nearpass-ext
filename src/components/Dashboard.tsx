@@ -5,7 +5,7 @@ import Sidebar, { drawerWidth } from './Sidebar';
 import Passwords from './Passwords';
 import Settings from './Settings';
 import { Box } from '@mui/material';
-import ConfigureMasterPassword from './ConfigureMasterPassword';
+import InitiateNewAccount from './InitiateNewAccount';
 import AskMasterPassword from './AskMasterPassword';
 import { Helmet } from 'react-helmet';
 
@@ -24,7 +24,7 @@ export default function Dashboard() {
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </Box>
-      <ConfigureMasterPassword />
+      <InitiateNewAccount />
       <AskMasterPassword />
     </>
   );

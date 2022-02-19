@@ -25,7 +25,7 @@ const schema = z
     path: ['repeatPassword'],
   });
 
-export default function ConfigureMasterPassword() {
+export default function InitiateNewAccount() {
   const [pemText, setPemText] = useState<string | null>(null);
   const onClosePemDialog = useCallback(() => setPemText(null), [setPemText]);
 
