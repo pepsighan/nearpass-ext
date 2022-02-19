@@ -7,22 +7,21 @@ import { persist } from 'zustand/middleware';
 import { zustandStorage } from '../extensionStorage';
 import { cipher, util } from 'node-forge';
 
-export type SitePassword = {
-  website: string;
-  username: string;
-  password: string;
+export type Text = {
+  title: string;
+  content: string;
 };
 
 /**
- * Adds a site password.
+ * Adds a text.
  */
-export function useAddSitePassword() {
+export function useAddText() {
   const encKey = useEncryptionKey();
   const contract = useContract();
   const query = useQueryClient();
 
   return useCallback(
-    async (payload: SitePassword) => {
+    async (payload: Text) => {
       if (!contract) {
         throw new Error('Wallet is not initialized yet');
       }
@@ -35,64 +34,64 @@ export function useAddSitePassword() {
       cipherText.start({ iv: encKey.iv });
       cipherText.update(util.createBuffer(JSON.stringify(payload)));
       cipherText.finish();
-      const encPass = cipherText.output.toHex();
+      const encText = cipherText.output.toHex();
 
       // Encrypt the payload JSON and store it.
-      await contract.add_site_password({ enc_pass: encPass });
+      await contract.add_text({ enc_text: encText });
 
       // Refetch the site passwords.
-      await query.invalidateQueries('all-site-passwords');
+      await query.invalidateQueries('all-texts');
     },
     [query, contract, encKey]
   );
 }
 
-type UseAllSitePasswordsInnerStore = {
-  encPasswords: string[];
+type UseAllTextsInnerStore = {
+  encTexts: string[];
 };
 
 /**
  * This is used for caching purposes only.
  */
-const useAllSitePasswordsInner = create<UseAllSitePasswordsInnerStore>(
+const useAllTextsInner = create<UseAllTextsInnerStore>(
   persist(
     (set, get) => ({
-      encPasswords: [],
+      encTexts: [],
     }),
-    { name: 'site-passwords', getStorage: () => zustandStorage }
+    { name: 'site-texts', getStorage: () => zustandStorage }
   )
 );
 
 /**
  * Gets all the site passwords of the user.
  */
-export function useAllSitePasswords() {
+export function useAllTexts() {
   const contract = useContract();
-  const storedEncPasses = useAllSitePasswordsInner(
-    useCallback((state) => state.encPasswords, [])
+  const storedEncTexts = useAllTextsInner(
+    useCallback((state) => state.encTexts, [])
   );
 
-  const query = useQuery('all-site-passwords', async () => {
+  const query = useQuery('all-texts', async () => {
     if (!contract) {
       return null;
     }
 
-    const ids = await contract.get_all_site_password_ids({
+    const ids = await contract.get_all_text_ids({
       account_id: contract.account.accountId,
     });
 
     if ((ids ?? []).length === 0) {
-      useAllSitePasswordsInner.setState({ encPasswords: [] });
+      useAllTextsInner.setState({ encTexts: [] });
       return [];
     }
 
-    const encPasses = await contract.get_site_passwords_by_ids({
+    const encTexts = await contract.get_texts_by_ids({
       account_id: contract.account.accountId,
-      pass_ids: ids!,
+      text_ids: ids!,
     });
 
-    useAllSitePasswordsInner.setState({ encPasswords: encPasses });
-    return encPasses;
+    useAllTextsInner.setState({ encTexts: encTexts });
+    return encTexts;
   });
 
   // Fetch for the first time the contract becomes available.
@@ -103,24 +102,22 @@ export function useAllSitePasswords() {
   }, [contract]);
 
   const encKey = useEncryptionKey();
-  const data: SitePassword[] = useMemo(() => {
+  const data: Text[] = useMemo(() => {
     if (!encKey) {
       return [];
     }
 
     // Load the data from cache until it is available from upstream.
     const allPasses =
-      query.isLoading || query.isRefetching
-        ? storedEncPasses
-        : query.data ?? [];
+      query.isLoading || query.isRefetching ? storedEncTexts : query.data ?? [];
 
-    return allPasses.map((encPass) => {
-      // Decrypt each of the password objects.
+    return allPasses.map((encText) => {
+      // Decrypt each of the text objects.
       const cipherText = cipher.createDecipher('AES-CBC', encKey.key);
       cipherText.start({ iv: encKey.iv });
-      cipherText.update(util.createBuffer(util.hexToBytes(encPass)));
+      cipherText.update(util.createBuffer(util.hexToBytes(encText)));
       cipherText.finish();
-      return JSON.parse(cipherText.output.data) as SitePassword;
+      return JSON.parse(cipherText.output.data) as Text;
     });
   }, [query, encKey]);
 

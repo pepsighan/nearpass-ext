@@ -17,6 +17,12 @@ type NearpassContract = {
     account_id: string;
     pass_ids: number[];
   }): Promise<string[]>;
+  add_text(arg: { enc_text: string }): Promise<string>;
+  get_all_text_ids(arg: { account_id: string }): Promise<number[] | null>;
+  get_texts_by_ids(arg: {
+    account_id: string;
+    text_ids: number[];
+  }): Promise<string[]>;
 };
 
 type UseWalletInnerStore = {
