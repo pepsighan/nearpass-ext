@@ -7,8 +7,8 @@ import { useForgetMasterPassword } from './master';
 import { ExtensionKeyStore } from '../extensionStorage';
 
 type NearpassContract = {
-  get_account_hash(arg: { account_id: string }): Promise<string>;
-  initialize_account_hash(arg: { hash: string }): Promise<void>;
+  get_account_signature(arg: { account_id: string }): Promise<string>;
+  initialize_account_signature(arg: { signature: string }): Promise<void>;
   add_site_password(arg: { enc_pass: string }): Promise<string>;
   get_all_site_password_ids(arg: { account_id: string }): Promise<number[]>;
   get_site_passwords_by_ids(arg: {

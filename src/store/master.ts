@@ -151,22 +151,15 @@ function useSetMasterPasswordAndPrivateKey() {
 }
 
 /**
- * Create a signatures for the account and password which can then be safely
- * stored in the chain. This signature is to be used to verify whether a
- * password for an account is correct or not. Since, a single master password
- * is used to encrypt all the data for an account stored on chain.
- *
- * Creating a hash assures that no part of the actual password whatsoever is
- * stored on-chain and only its fingerprint is stored (which cannot be used
- * to recover the original).
+ * Create a signatures for the account which can then be safely stored in the
+ * chain. This is to verify if a private key is correct for the account.
  */
-async function signAccountPasswordCombination(
+async function signAccountId(
   accountId: string,
-  privateKey: pki.rsa.PrivateKey,
-  password: string
+  privateKey: pki.rsa.PrivateKey
 ): Promise<string> {
   const hash = md.sha512.create();
-  hash.update(accountId + password, 'utf8');
+  hash.update(accountId, 'utf8');
   return privateKey.sign(hash);
 }
 
@@ -188,7 +181,7 @@ export function useSecurelyStoreMasterPassword() {
       // If hash already exists, it cannot be initialized again.
       let storedHash: string | undefined;
       try {
-        storedHash = await contract.get_account_hash({
+        storedHash = await contract.get_account_signature({
           account_id: contract.account.accountId,
         });
       } catch (err: any) {
@@ -205,14 +198,10 @@ export function useSecurelyStoreMasterPassword() {
       const keyPair = await generateRSAKeyPair();
       const privateKeyPem = pki.privateKeyToPem(keyPair.privateKey);
 
-      const hash = await signAccountPasswordCombination(
-        accountId!,
-        keyPair.privateKey,
-        password
-      );
+      const signature = await signAccountId(accountId!, keyPair.privateKey);
 
       // Store the hash.
-      await contract.initialize_account_hash({ hash });
+      await contract.initialize_account_signature({ signature });
       await setMasterPassword(password, privateKeyPem);
 
       return privateKeyPem;
@@ -236,16 +225,12 @@ export function useVerifyMasterPassword() {
       }
 
       // If the hash is not stored yet, it will throw error.
-      const storedHash = await contract.get_account_hash({
+      const storedHash = await contract.get_account_signature({
         account_id: accountId!,
       });
 
       const privateKey = pki.privateKeyFromPem(privateKeyPem);
-      const hash = await signAccountPasswordCombination(
-        accountId!,
-        privateKey,
-        password
-      );
+      const hash = await signAccountId(accountId!, privateKey);
 
       const isCorrect = hash === storedHash;
       if (isCorrect) {
@@ -270,7 +255,7 @@ export function useGetAccountHash() {
     }
 
     try {
-      return await contract.get_account_hash({
+      return await contract.get_account_signature({
         account_id: contract.account.accountId,
       });
     } catch (err: any) {
