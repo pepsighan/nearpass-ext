@@ -1,8 +1,8 @@
 import {
-  useGetAccountHash,
+  useGetAccountSignature,
   useMasterPassword,
   useVerifyAccount,
-} from '../store/master';
+} from '../store/account';
 import { useForm } from 'react-hook-form';
 import React, { useCallback } from 'react';
 import {
@@ -35,7 +35,7 @@ const schema = z.object({
 });
 
 export default function RestoreAccount() {
-  const [{ value: hash, loading }] = useGetAccountHash();
+  const [{ value: signature, loading }] = useGetAccountSignature();
   const isPasswordPresent = Boolean(useMasterPassword());
 
   const {
@@ -65,7 +65,7 @@ export default function RestoreAccount() {
   );
 
   return (
-    <Dialog open={!loading && Boolean(hash) && !isPasswordPresent}>
+    <Dialog open={!loading && Boolean(signature) && !isPasswordPresent}>
       <DialogTitle>Restore Nearpass</DialogTitle>
 
       <DialogContent>

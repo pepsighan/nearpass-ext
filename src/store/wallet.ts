@@ -3,7 +3,7 @@ import { useCallback, useEffect } from 'react';
 import { connect, Contract, WalletConnection } from 'near-api-js';
 import networkConfig from '../config/networkConfig';
 import config from '../config/config';
-import { useForgetMasterPassword } from './master';
+import { useForgetAccount } from './account';
 import { ExtensionKeyStore } from '../extensionStorage';
 
 type NearpassContract = {
@@ -118,7 +118,7 @@ export function useLogin() {
  */
 export function useLogout() {
   const wallet = useWallet();
-  const forgetMasterPassword = useForgetMasterPassword();
+  const forgetMasterPassword = useForgetAccount();
 
   return useCallback(async () => {
     if (!wallet) {

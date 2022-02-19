@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import React, { useCallback, useState } from 'react';
-import { useGetAccountHash, useInitiateAccount } from '../store/master';
+import { useGetAccountSignature, useInitiateAccount } from '../store/account';
 import { useForm } from 'react-hook-form';
 import { materialRegister } from '../materialRegister';
 import { z } from 'zod';
@@ -29,7 +29,8 @@ export default function InitiateNewAccount() {
   const [pemText, setPemText] = useState<string | null>(null);
   const onClosePemDialog = useCallback(() => setPemText(null), [setPemText]);
 
-  const [{ value, loading }, refetch] = useGetAccountHash();
+  const [{ value: accountSignature, loading }, refetch] =
+    useGetAccountSignature();
   const {
     register,
     formState: { errors, isSubmitting },
@@ -55,7 +56,7 @@ export default function InitiateNewAccount() {
 
   return (
     <>
-      <Dialog open={!loading && !Boolean(value)}>
+      <Dialog open={!loading && !Boolean(accountSignature)}>
         <DialogTitle>Set Master Password</DialogTitle>
 
         <DialogContent>

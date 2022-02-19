@@ -9,22 +9,23 @@ import { md, pki } from 'node-forge';
 import networkConfig from '../config/networkConfig';
 import { zustandStorage } from '../extensionStorage';
 
-type UseMasterPasswordInnerStore = {
+type UseAccountInner = {
   encPassword: string | null;
   encPrivateKey: string | null;
 };
 
 /**
- * Stores the master password for the account which is used to authenticate
- * the user when they open the app and is also used to encrypt their passwords.
+ * Stores the master password and private key for the account which is used to
+ * authenticate the user when they open the app and is also used to encrypt
+ * their passwords.
  */
-const useMasterPasswordInner = create<UseMasterPasswordInnerStore>(
+const useAccountInner = create<UseAccountInner>(
   persist(
     (set, get) => ({
       encPassword: null,
       encPrivateKey: null,
     }),
-    { name: 'nearpass-session', getStorage: () => zustandStorage }
+    { name: 'nearpass-account', getStorage: () => zustandStorage }
   )
 );
 
@@ -32,7 +33,7 @@ const useMasterPasswordInner = create<UseMasterPasswordInnerStore>(
 const appName = 'nearpass';
 
 /**
- * Gets the key which is used to encrypt password before storing in local
+ * Gets the key which is used to encrypt data before storing in local
  * storage. The key is going to be same for an account for a login session.
  * It will change between accounts and login session.
  */
@@ -66,7 +67,7 @@ function useEncryptionKeyForLocalStorage() {
 
     // The key changes if the account changes. And passwords change when
     // accounts change.
-    return useMasterPasswordInner.subscribe(async () => {
+    return useAccountInner.subscribe(async () => {
       const key = await getEncryptionKeyForLocalStorage(wallet);
       setKey(key);
     });
@@ -81,7 +82,7 @@ function useEncryptionKeyForLocalStorage() {
 export function useMasterPassword() {
   const key = useEncryptionKeyForLocalStorage();
 
-  return useMasterPasswordInner(
+  return useAccountInner(
     useCallback(
       (state) => {
         if (!key || !state.encPassword) {
@@ -100,7 +101,7 @@ export function useMasterPassword() {
 export function usePrivateKey() {
   const key = useEncryptionKeyForLocalStorage();
 
-  return useMasterPasswordInner(
+  return useAccountInner(
     useCallback(
       (state) => {
         if (!key || !state.encPrivateKey) {
@@ -129,9 +130,9 @@ export function usePublicKey() {
 }
 
 /**
- * Sets master password and the private key for encryption.
+ * Sets master password.
  */
-function useSetMasterPasswordAndPrivateKey() {
+function useSetMasterPassword() {
   const wallet = useWallet();
 
   return useCallback(
@@ -144,7 +145,7 @@ function useSetMasterPasswordAndPrivateKey() {
       const encPassword = AES.encrypt(password, key).toString();
       const encPrivateKey = AES.encrypt(privateKey, key).toString();
 
-      useMasterPasswordInner.setState({ encPassword, encPrivateKey });
+      useAccountInner.setState({ encPassword, encPrivateKey });
     },
     [wallet]
   );
@@ -164,7 +165,7 @@ function useSetPrivateKey() {
 
       const key = await getEncryptionKeyForLocalStorage(wallet);
       const encPrivateKey = AES.encrypt(privateKey, key).toString();
-      useMasterPasswordInner.setState({ encPrivateKey });
+      useAccountInner.setState({ encPrivateKey });
     },
     [wallet]
   );
@@ -260,10 +261,10 @@ export function useVerifyAccount() {
 }
 
 /**
- * Gets the user's account hash which only exists if the user has set a
- * master password.
+ * Gets the user's account signature which only exists if the user has initiated
+ * its account.
  */
-export function useGetAccountHash() {
+export function useGetAccountSignature() {
   const contract = useContract();
 
   const obj = useAsyncFn(async () => {
@@ -294,12 +295,12 @@ export function useGetAccountHash() {
 }
 
 /**
- * Removes the master password from the state and storage. Used during
- * logout.
+ * Removes the master password and private key from the state and storage.
+ * Used during logout.
  */
-export function useForgetMasterPassword() {
+export function useForgetAccount() {
   return useCallback(() => {
-    useMasterPasswordInner.setState({ encPassword: null });
+    useAccountInner.setState({ encPassword: null, encPrivateKey: null });
   }, []);
 }
 

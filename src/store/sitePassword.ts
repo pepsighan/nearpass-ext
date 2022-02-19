@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useContract } from './wallet';
-import { useMasterPassword, usePrivateKey, usePublicKey } from './master';
+import { useMasterPassword, usePrivateKey, usePublicKey } from './account';
 import { useQuery, useQueryClient } from 'react-query';
 import create from 'zustand';
 import { persist } from 'zustand/middleware';
