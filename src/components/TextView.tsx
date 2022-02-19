@@ -1,5 +1,4 @@
 import React from 'react';
-import { useAllSitePasswords } from '../store/sitePassword';
 import {
   Container,
   IconButton,
@@ -9,13 +8,14 @@ import {
 } from '@mui/material';
 import { MdRemoveRedEye } from 'react-icons/md';
 import { useBoolean } from 'react-use';
+import { useAllTexts } from '../store/text';
 
 type TextViewProps = {
   currentTextIndex: number;
 };
 
 export default function TextView({ currentTextIndex }: TextViewProps) {
-  const { data } = useAllSitePasswords();
+  const { data } = useAllTexts();
   const item = (data ?? [])[currentTextIndex];
 
   const [visible, toggleVisible] = useBoolean(false);
@@ -24,18 +24,14 @@ export default function TextView({ currentTextIndex }: TextViewProps) {
     <Container sx={{ mt: 8 }}>
       <Stack alignItems="center">
         <Stack spacing={2} maxWidth={400} width="100%">
-          <TextField label="Website" fullWidth value={item.website} disabled />
+          <TextField label="Title" fullWidth value={item.title} disabled />
           <TextField
-            label="Username"
+            label="Content"
             fullWidth
-            value={item.username}
+            value={visible ? item.content : '****************'}
             disabled
-          />
-          <TextField
-            label="Password"
-            fullWidth
-            value={visible ? item.password : '****************'}
-            disabled
+            multiline
+            minRows={6}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
