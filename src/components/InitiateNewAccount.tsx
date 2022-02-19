@@ -4,6 +4,7 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  IconButton,
   TextField,
   Typography,
 } from '@mui/material';
@@ -18,6 +19,8 @@ import { useForm } from 'react-hook-form';
 import { materialRegister } from '../materialRegister';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { MdRemoveRedEye } from 'react-icons/md';
+import { useBoolean, useCopyToClipboard } from 'react-use';
 
 const schema = z
   .object({
@@ -31,7 +34,14 @@ const schema = z
 
 export default function InitiateNewAccount() {
   const [encKey, setEncKey] = useState<string | null>(null);
+  const [shown, toggleShown] = useBoolean(false);
   const onCloseEncKeyDialog = useCallback(() => setEncKey(null), [setEncKey]);
+
+  const [{ value }, copyToClipboard] = useCopyToClipboard();
+  const onCopy = useCallback(
+    () => (encKey ? copyToClipboard(encKey) : null),
+    [encKey, copyToClipboard]
+  );
 
   const [{ value: accountSignature, loading }, refetch] =
     useGetAccountSignature();
@@ -124,7 +134,21 @@ export default function InitiateNewAccount() {
               wordWrap: 'break-word',
             }}
           >
-            {encKey}
+            {shown ? encKey : '*'.repeat(encKey?.length ?? 0)}
+
+            <Box sx={{ mt: 2 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                sx={{ mr: 2 }}
+                onClick={onCopy}
+              >
+                {value === encKey ? 'Copied' : 'Copy'}
+              </Button>
+              <IconButton size="small" onClick={toggleShown}>
+                <MdRemoveRedEye />
+              </IconButton>
+            </Box>
           </Typography>
 
           <Button
