@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { useAllSitePasswords } from '../store/sitePassword';
 import {
+  Button,
   Container,
   IconButton,
   InputAdornment,
@@ -21,6 +22,15 @@ export default function SitePasswordView({
   const item = (data ?? [])[currentPassIndex];
 
   const [visible, toggleVisible] = useBoolean(false);
+  const [sure, setSure] = useState(false);
+
+  const onDelete = useCallback(() => {
+    if (!sure) {
+      setSure(true);
+    }
+
+    // TODO: Delete the password.
+  }, [sure, setSure]);
 
   return item ? (
     <Container sx={{ mt: 8 }}>
@@ -48,6 +58,9 @@ export default function SitePasswordView({
               ),
             }}
           />
+          <Button variant="contained" color="error" onClick={onDelete}>
+            {sure ? 'Are you sure?' : 'Delete Password'}
+          </Button>
         </Stack>
       </Stack>
     </Container>

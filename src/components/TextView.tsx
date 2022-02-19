@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
+  Button,
   Container,
   IconButton,
   InputAdornment,
@@ -19,6 +20,15 @@ export default function TextView({ currentTextIndex }: TextViewProps) {
   const item = (data ?? [])[currentTextIndex];
 
   const [visible, toggleVisible] = useBoolean(false);
+  const [sure, setSure] = useState(false);
+
+  const onDelete = useCallback(() => {
+    if (!sure) {
+      setSure(true);
+    }
+
+    // TODO: Delete the text.
+  }, [sure, setSure]);
 
   return item ? (
     <Container sx={{ mt: 8 }}>
@@ -42,6 +52,9 @@ export default function TextView({ currentTextIndex }: TextViewProps) {
               ),
             }}
           />
+          <Button variant="contained" color="error" onClick={onDelete}>
+            {sure ? 'Are you sure?' : 'Delete Text'}
+          </Button>
         </Stack>
       </Stack>
     </Container>
