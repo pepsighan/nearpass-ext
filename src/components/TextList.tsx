@@ -14,7 +14,7 @@ export default function TextList({ currentIndex, onSelect }: TextListProps) {
     <List sx={{ minWidth: 200 }}>
       {(data ?? []).map((pass, index) => (
         <ListItem
-          key={index}
+          key={pass.id}
           button
           selected={currentIndex === index}
           onClick={() => onSelect(index)}

@@ -8,6 +8,7 @@ import { zustandStorage } from '../extensionStorage';
 import { cipher, util } from 'node-forge';
 
 export type SitePassword = {
+  id: number;
   website: string;
   username: string;
   password: string;
