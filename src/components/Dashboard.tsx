@@ -3,7 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import Navigation from './Navigation';
 import Sidebar, { drawerWidth } from './Sidebar';
 import Passwords from './Passwords';
-import Settings from './Settings';
+import Texts from './Texts';
 import { Box } from '@mui/material';
 import InitiateNewAccount from './InitiateNewAccount';
 import RestoreAccount from './RestoreAccount';
@@ -21,7 +21,7 @@ export default function Dashboard() {
       <Box ml={`${drawerWidth}px`}>
         <Routes>
           <Route path="/" element={<Passwords />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/texts" element={<Texts />} />
         </Routes>
       </Box>
       <InitiateNewAccount />

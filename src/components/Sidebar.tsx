@@ -31,8 +31,8 @@ export default function Sidebar() {
         <ListItem button component={Link} to="/">
           <ListItemText primary="Passwords" />
         </ListItem>
-        <ListItem button component={Link} to="/settings">
-          <ListItemText primary="Settings" />
+        <ListItem button component={Link} to="/texts">
+          <ListItemText primary="Texts" />
         </ListItem>
       </List>
     </Drawer>
