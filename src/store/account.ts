@@ -5,7 +5,7 @@ import { useAccountId, useContract, useWallet } from './wallet';
 import { persist } from 'zustand/middleware';
 import { WalletConnection } from 'near-api-js';
 import { useAsyncFn } from 'react-use';
-import { cipher, random, util } from 'node-forge';
+import { hmac, random, util } from 'node-forge';
 import networkConfig from '../config/networkConfig';
 import { zustandStorage } from '../extensionStorage';
 
@@ -181,11 +181,10 @@ async function signAccountId(
   accountId: string,
   encKey: EncryptionKey
 ): Promise<string> {
-  const cipherText = cipher.createCipher('AES-CBC', encKey.key);
-  cipherText.start({ iv: encKey.iv });
-  cipherText.update(util.createBuffer(accountId));
-  cipherText.finish();
-  return cipherText.output.toHex();
+  const h = hmac.create();
+  h.start('sha512', encKey.key);
+  h.update(util.createBuffer(accountId));
+  return h.digest().toHex();
 }
 
 /**
