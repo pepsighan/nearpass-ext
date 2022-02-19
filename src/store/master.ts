@@ -151,6 +151,26 @@ function useSetMasterPasswordAndPrivateKey() {
 }
 
 /**
+ * Sets a new private key after encrypting it.
+ */
+function useSetPrivateKey() {
+  const wallet = useWallet();
+
+  return useCallback(
+    async (privateKey: string) => {
+      if (!wallet) {
+        throw new Error('Wallet is not initialized.');
+      }
+
+      const key = await getEncryptionKeyForLocalStorage(wallet);
+      const encPrivateKey = AES.encrypt(privateKey, key).toString();
+      useMasterPasswordInner.setState({ encPrivateKey });
+    },
+    [wallet]
+  );
+}
+
+/**
  * Create a signatures for the account which can then be safely stored in the
  * chain. This is to verify if a private key is correct for the account.
  */
@@ -169,10 +189,10 @@ async function signAccountId(
 export function useInitiateAccount() {
   const accountId = useAccountId();
   const contract = useContract();
-  const wallet = useWallet();
+  const setPrivateKey = useSetPrivateKey();
 
   return useCallback(async () => {
-    if (!contract || !wallet) {
+    if (!contract) {
       throw new Error('Wallet not initialized yet');
     }
 
@@ -200,25 +220,23 @@ export function useInitiateAccount() {
     await contract.initialize_account_signature({ signature });
 
     // Store the encrypted private key locally.
-    const key = await getEncryptionKeyForLocalStorage(wallet);
     const privateKeyPem = pki.privateKeyToPem(keyPair.privateKey);
-    const encPrivateKey = AES.encrypt(privateKeyPem, key).toString();
-    useMasterPasswordInner.setState({ encPrivateKey });
+    await setPrivateKey(privateKeyPem);
 
     return privateKeyPem;
-  }, [accountId, contract]);
+  }, [accountId, contract, setPrivateKey]);
 }
 
 /**
- * Verify whether the given master password is correct.
+ * Verify whether the given private key is correct.
  */
-export function useVerifyMasterPassword() {
+export function useVerifyAccount() {
   const accountId = useAccountId();
   const contract = useContract();
-  const setMasterPassword = useSetMasterPasswordAndPrivateKey();
+  const setPrivateKey = useSetPrivateKey();
 
   return useCallback(
-    async (password: string, privateKeyPem: string) => {
+    async (privateKeyPem: string) => {
       if (!contract) {
         throw new Error('Wallet not initialized yet');
       }
@@ -233,11 +251,11 @@ export function useVerifyMasterPassword() {
 
       const isCorrect = hash === storedHash;
       if (isCorrect) {
-        await setMasterPassword(password, privateKeyPem);
+        await setPrivateKey(privateKeyPem);
       }
       return isCorrect;
     },
-    [accountId, contract]
+    [accountId, contract, setPrivateKey]
   );
 }
 

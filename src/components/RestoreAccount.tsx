@@ -1,7 +1,7 @@
 import {
   useGetAccountHash,
   useMasterPassword,
-  useVerifyMasterPassword,
+  useVerifyAccount,
 } from '../store/master';
 import { useForm } from 'react-hook-form';
 import React, { useCallback } from 'react';
@@ -51,18 +51,17 @@ export default function RestoreAccount() {
     resolver: zodResolver(schema),
   });
 
-  const verifyMasterPassword = useVerifyMasterPassword();
+  const verifyAccount = useVerifyAccount();
   const onSubmit = useCallback(
     async (state) => {
-      const isCorrect = await verifyMasterPassword(
-        state.masterPassword,
-        state.privateKeyPem
-      );
+      // TODO: Store the master password.
+
+      const isCorrect = await verifyAccount(state.privateKeyPem);
       if (!isCorrect) {
-        setError('masterPassword', { message: 'Master password is incorrect' });
+        setError('privateKeyPem', { message: 'Private key is incorrect' });
       }
     },
-    [verifyMasterPassword]
+    [verifyAccount]
   );
 
   return (
@@ -85,7 +84,7 @@ export default function RestoreAccount() {
           </Typography>
 
           <TextField
-            label="Private key PEM"
+            label="Private key"
             fullWidth
             type="text"
             autoComplete="off"
