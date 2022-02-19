@@ -81,9 +81,14 @@ export function useAllSitePasswords() {
       account_id: contract.account.accountId,
     });
 
+    if ((ids ?? []).length === 0) {
+      useAllSitePasswordsInner.setState({ encPasswords: [] });
+      return [];
+    }
+
     const encPasses = await contract.get_site_passwords_by_ids({
       account_id: contract.account.accountId,
-      pass_ids: ids,
+      pass_ids: ids!,
     });
 
     useAllSitePasswordsInner.setState({ encPasswords: encPasses });
