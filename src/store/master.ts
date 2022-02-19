@@ -1,5 +1,5 @@
 import create from 'zustand';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AES, enc } from 'crypto-js';
 import { useAccountId, useContract, useWallet } from './wallet';
 import { persist } from 'zustand/middleware';
@@ -50,9 +50,9 @@ async function getEncryptionKeyForLocalStorage(wallet: WalletConnection) {
 }
 
 /**
- * Gets the master password in plain text.
+ * Gets the encryption key for use with data stored in local storage.
  */
-export function useMasterPassword() {
+function useEncryptionKeyForLocalStorage() {
   const wallet = useWallet();
   const [key, setKey] = useState<string | null>(null);
 
@@ -72,6 +72,15 @@ export function useMasterPassword() {
     });
   }, [wallet, setKey]);
 
+  return key;
+}
+
+/**
+ * Gets the master password in plain text.
+ */
+export function useMasterPassword() {
+  const key = useEncryptionKeyForLocalStorage();
+
   return useMasterPasswordInner(
     useCallback(
       (state) => {
@@ -86,9 +95,43 @@ export function useMasterPassword() {
 }
 
 /**
+ * Gets the private key for the account.
+ */
+export function usePrivateKey() {
+  const key = useEncryptionKeyForLocalStorage();
+
+  return useMasterPasswordInner(
+    useCallback(
+      (state) => {
+        if (!key || !state.encPrivateKey) {
+          return null;
+        }
+        const privateKey = AES.decrypt(state.encPrivateKey, key).toString(
+          enc.Utf8
+        );
+        return pki.privateKeyFromPem(privateKey);
+      },
+      [key]
+    )
+  );
+}
+
+/**
+ * Gets the public key for the account.
+ */
+export function usePublicKey() {
+  const pKey = usePrivateKey();
+
+  return useMemo(
+    () => (pKey ? pki.publicKeyFromPem(pki.privateKeyToPem(pKey)) : null),
+    []
+  );
+}
+
+/**
  * Sets master password and the private key for encryption.
  */
-function useSetMasterPassword() {
+function useSetMasterPasswordAndPrivateKey() {
   const wallet = useWallet();
 
   return useCallback(
@@ -134,7 +177,7 @@ async function signAccountPasswordCombination(
 export function useSecurelyStoreMasterPassword() {
   const accountId = useAccountId();
   const contract = useContract();
-  const setMasterPassword = useSetMasterPassword();
+  const setMasterPassword = useSetMasterPasswordAndPrivateKey();
 
   return useCallback(
     async (password: string) => {
@@ -184,7 +227,7 @@ export function useSecurelyStoreMasterPassword() {
 export function useVerifyMasterPassword() {
   const accountId = useAccountId();
   const contract = useContract();
-  const setMasterPassword = useSetMasterPassword();
+  const setMasterPassword = useSetMasterPasswordAndPrivateKey();
 
   return useCallback(
     async (password: string, privateKeyPem: string) => {

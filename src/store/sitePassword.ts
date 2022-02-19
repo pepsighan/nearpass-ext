@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useContract } from './wallet';
-import { useMasterPassword } from './master';
+import { useMasterPassword, usePublicKey } from './master';
 import { AES, enc } from 'crypto-js';
 import { useQuery, useQueryClient } from 'react-query';
 import create from 'zustand';
@@ -17,7 +17,7 @@ export type SitePassword = {
  * Adds a site password.
  */
 export function useAddSitePassword() {
-  const masterPassword = useMasterPassword();
+  const publicKey = usePublicKey();
   const contract = useContract();
   const query = useQueryClient();
 
@@ -27,21 +27,18 @@ export function useAddSitePassword() {
         throw new Error('Wallet is not initialized yet');
       }
 
-      if (!masterPassword) {
-        throw new Error('Master password is not initialized yet');
+      if (!publicKey) {
+        throw new Error('Account is not initialized yet');
       }
 
       // Encrypt the payload JSON and store it.
-      const encPass = AES.encrypt(
-        JSON.stringify(payload),
-        masterPassword
-      ).toString();
+      const encPass = publicKey.encrypt(JSON.stringify(payload));
       await contract.add_site_password({ enc_pass: encPass });
 
       // Refetch the site passwords.
       await query.invalidateQueries('all-site-passwords');
     },
-    [query, contract, masterPassword]
+    [query, contract, publicKey]
   );
 }
 
