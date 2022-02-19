@@ -1,6 +1,7 @@
 import {
   useGetAccountSignature,
   useMasterPassword,
+  useSetMasterPassword,
   useVerifyAccount,
 } from '../store/account';
 import { useForm } from 'react-hook-form';
@@ -52,14 +53,15 @@ export default function RestoreAccount() {
   });
 
   const verifyAccount = useVerifyAccount();
+  const setMasterPassword = useSetMasterPassword();
   const onSubmit = useCallback(
     async (state) => {
-      // TODO: Store the master password.
-
       const isCorrect = await verifyAccount(state.privateKeyPem);
       if (!isCorrect) {
         setError('privateKeyPem', { message: 'Private key is incorrect' });
+        return;
       }
+      await setMasterPassword(state.masterPassword);
     },
     [verifyAccount]
   );

@@ -132,20 +132,18 @@ export function usePublicKey() {
 /**
  * Sets master password.
  */
-function useSetMasterPassword() {
+export function useSetMasterPassword() {
   const wallet = useWallet();
 
   return useCallback(
-    async (password: string, privateKey: string) => {
+    async (password: string) => {
       if (!wallet) {
         throw new Error('Wallet is not initialized.');
       }
 
       const key = await getEncryptionKeyForLocalStorage(wallet);
       const encPassword = AES.encrypt(password, key).toString();
-      const encPrivateKey = AES.encrypt(privateKey, key).toString();
-
-      useAccountInner.setState({ encPassword, encPrivateKey });
+      useAccountInner.setState({ encPassword });
     },
     [wallet]
   );

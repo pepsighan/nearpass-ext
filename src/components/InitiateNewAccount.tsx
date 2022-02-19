@@ -9,7 +9,11 @@ import {
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import React, { useCallback, useState } from 'react';
-import { useGetAccountSignature, useInitiateAccount } from '../store/account';
+import {
+  useGetAccountSignature,
+  useInitiateAccount,
+  useSetMasterPassword,
+} from '../store/account';
 import { useForm } from 'react-hook-form';
 import { materialRegister } from '../materialRegister';
 import { z } from 'zod';
@@ -44,12 +48,13 @@ export default function InitiateNewAccount() {
   });
 
   const initiateAccount = useInitiateAccount();
+  const setMasterPassword = useSetMasterPassword();
   const onSubmit = useCallback(
     async (state) => {
-      // TODO: Store the master password for locally.
       const pem = await initiateAccount();
       await refetch();
       setPemText(pem);
+      await setMasterPassword(state.masterPassword);
     },
     [setPemText, refetch]
   );
