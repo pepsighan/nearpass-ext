@@ -171,6 +171,8 @@ export function useSecurelyStoreMasterPassword() {
       // Store the hash.
       await contract.initialize_account_hash({ hash });
       await setMasterPassword(password, privateKeyPem);
+
+      return privateKeyPem;
     },
     [accountId, contract]
   );
