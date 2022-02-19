@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { List, ListItem, ListItemText, Paper, Popper } from '@mui/material';
+import {
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
+  Popper,
+  Typography,
+} from '@mui/material';
 import { useAllSitePasswords } from '../store/sitePassword';
 
 export default function PasswordSuggestion() {
@@ -33,14 +40,12 @@ export default function PasswordSuggestion() {
   const { data } = useAllSitePasswords();
   const passwords = useMemo(
     () =>
-      data
-        .filter((it) => {
-          const hostname = new URL(it.website).hostname;
-          const currentHost = window.location.hostname;
+      data.filter((it) => {
+        const hostname = new URL(it.website).hostname;
+        const currentHost = window.location.hostname;
 
-          return hostname === currentHost;
-        })
-        .map((it) => it.password),
+        return hostname === currentHost;
+      }),
     [data]
   );
 
@@ -56,7 +61,12 @@ export default function PasswordSuggestion() {
                 anchorEl.value = it;
               }}
             >
-              <ListItemText>{'*'.repeat(it.length)}</ListItemText>
+              <ListItemText disableTypography>
+                <Typography variant="body2" color="textSecondary">
+                  {it.username}
+                </Typography>
+                <Typography>{'*'.repeat(it.password.length)}</Typography>
+              </ListItemText>
             </ListItem>
           ))}
         </List>
