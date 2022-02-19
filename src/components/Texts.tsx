@@ -18,7 +18,7 @@ export default function Texts() {
           overflow: 'auto',
         }}
       >
-        <TextList onSelect={setCurrentTextIndex} />
+        <TextList onSelect={setCurrentTextIndex} currentIndex={currentTextIndex} />
       </Grid>
       <Grid item flex={1}>
         <Container>

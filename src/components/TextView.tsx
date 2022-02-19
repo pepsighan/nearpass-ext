@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Container,
   IconButton,
@@ -7,8 +7,10 @@ import {
   TextField,
 } from '@mui/material';
 import { MdRemoveRedEye } from 'react-icons/md';
-import { useBoolean } from 'react-use';
-import { useAllTexts } from '../store/text';
+import { useAsyncFn, useBoolean } from 'react-use';
+import { useAllTexts, useDeleteText } from '../store/text';
+import { useSnackbar } from 'notistack';
+import { LoadingButton } from '@mui/lab';
 
 type TextViewProps = {
   currentTextIndex: number;
@@ -19,6 +21,16 @@ export default function TextView({ currentTextIndex }: TextViewProps) {
   const item = (data ?? [])[currentTextIndex];
 
   const [visible, toggleVisible] = useBoolean(false);
+  const [sure, setSure] = useState(false);
+
+  const { enqueueSnackbar } = useSnackbar();
+  const deleteText = useDeleteText();
+
+  const onConfirm = useCallback(() => setSure(true), []);
+  const [{ loading }, onDelete] = useAsyncFn(async () => {
+    await deleteText(item.id);
+    enqueueSnackbar('Successfully deleted your text.', { variant: 'success' });
+  }, [sure, setSure, item, deleteText, enqueueSnackbar]);
 
   return item ? (
     <Container sx={{ mt: 8 }}>
@@ -42,6 +54,14 @@ export default function TextView({ currentTextIndex }: TextViewProps) {
               ),
             }}
           />
+          <LoadingButton
+            variant="contained"
+            color="error"
+            onClick={sure ? onDelete : onConfirm}
+            loading={loading}
+          >
+            {sure ? 'Are you sure?' : 'Delete Text'}
+          </LoadingButton>
         </Stack>
       </Stack>
     </Container>

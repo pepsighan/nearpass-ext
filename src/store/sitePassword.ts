@@ -8,6 +8,7 @@ import { zustandStorage } from '../extensionStorage';
 import { cipher, util } from 'node-forge';
 
 export type SitePassword = {
+  id: number;
   website: string;
   username: string;
   password: string;
@@ -48,7 +49,7 @@ export function useAddSitePassword() {
 }
 
 type UseAllSitePasswordsInnerStore = {
-  encPasswords: string[];
+  encPasswords: { id: number; encPass: string }[];
 };
 
 /**
@@ -86,13 +87,17 @@ export function useAllSitePasswords() {
       return [];
     }
 
-    const encPasses = await contract.get_site_passwords_by_ids({
+    const passwords = await contract.get_site_passwords_by_ids({
       account_id: contract.account.accountId,
       pass_ids: ids!,
     });
+    const encPasswords = passwords.map((it, index) => ({
+      id: ids![index],
+      encPass: it,
+    }));
 
-    useAllSitePasswordsInner.setState({ encPasswords: encPasses });
-    return encPasses;
+    useAllSitePasswordsInner.setState({ encPasswords });
+    return encPasswords;
   });
 
   // Fetch for the first time the contract becomes available.
@@ -114,13 +119,16 @@ export function useAllSitePasswords() {
         ? storedEncPasses
         : query.data ?? [];
 
-    return allPasses.map((encPass) => {
+    return allPasses.map(({ id, encPass }) => {
       // Decrypt each of the password objects.
       const cipherText = cipher.createDecipher('AES-CBC', encKey.key);
       cipherText.start({ iv: encKey.iv });
       cipherText.update(util.createBuffer(util.hexToBytes(encPass)));
       cipherText.finish();
-      return JSON.parse(cipherText.output.data) as SitePassword;
+      return {
+        id,
+        ...JSON.parse(cipherText.output.data),
+      } as SitePassword;
     });
   }, [query, encKey]);
 
@@ -128,4 +136,26 @@ export function useAllSitePasswords() {
     ...query,
     data,
   };
+}
+
+/**
+ * Deletes a password from the chain.
+ */
+export function useDeletePassword() {
+  const contract = useContract();
+  const query = useQueryClient();
+
+  return useCallback(
+    async (passId: number) => {
+      if (!contract) {
+        throw new Error('Wallet is not initialized yet');
+      }
+
+      await contract.delete_site_password({ pass_id: passId });
+
+      // Refetch the site passwords.
+      await query.invalidateQueries('all-site-passwords');
+    },
+    [contract]
+  );
 }
