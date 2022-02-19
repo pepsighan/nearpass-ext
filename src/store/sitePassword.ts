@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useContract } from './wallet';
-import { useMasterPassword, usePublicKey } from './master';
-import { AES, enc } from 'crypto-js';
+import { useMasterPassword, usePrivateKey, usePublicKey } from './master';
 import { useQuery, useQueryClient } from 'react-query';
 import create from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -93,8 +92,9 @@ export function useAllSitePasswords() {
     }
   }, [contract, masterPassword]);
 
+  const privateKey = usePrivateKey();
   const data: SitePassword[] = useMemo(() => {
-    if (!masterPassword) {
+    if (!masterPassword || !privateKey) {
       return [];
     }
 
@@ -105,7 +105,7 @@ export function useAllSitePasswords() {
         : query.data ?? [];
 
     return allPasses.map((encPass) => {
-      const decoded = AES.decrypt(encPass, masterPassword).toString(enc.Utf8);
+      const decoded = privateKey.decrypt(encPass);
       return JSON.parse(decoded) as SitePassword;
     });
   }, [query, storedEncPasses, masterPassword]);
