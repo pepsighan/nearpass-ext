@@ -1,29 +1,29 @@
 import create from 'zustand';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AES, enc } from 'crypto-js';
 import { useAccountId, useContract, useWallet } from './wallet';
 import { persist } from 'zustand/middleware';
 import { WalletConnection } from 'near-api-js';
 import { useAsyncFn } from 'react-use';
-import { md, pki } from 'node-forge';
+import { cipher, random, util } from 'node-forge';
 import networkConfig from '../config/networkConfig';
 import { zustandStorage } from '../extensionStorage';
 
 type UseAccountInner = {
   encPassword: string | null;
-  encPrivateKey: string | null;
+  encEncryptionKey: string | null;
 };
 
 /**
- * Stores the master password and private key for the account which is used to
- * authenticate the user when they open the app and is also used to encrypt
+ * Stores the master password and encryption key for the account which is used
+ * to authenticate the user when they open the app and is also used to encrypt
  * their passwords.
  */
 const useAccountInner = create<UseAccountInner>(
   persist(
     (set, get) => ({
       encPassword: null,
-      encPrivateKey: null,
+      encEncryptionKey: null,
     }),
     { name: 'nearpass-account', getStorage: () => zustandStorage }
   )
@@ -36,6 +36,9 @@ const appName = 'nearpass';
  * Gets the key which is used to encrypt data before storing in local
  * storage. The key is going to be same for an account for a login session.
  * It will change between accounts and login session.
+ *
+ * This is different from the account's encryption key which is used to
+ * encrypt the data stored on chain.
  */
 async function getEncryptionKeyForLocalStorage(wallet: WalletConnection) {
   const netConf = networkConfig();
@@ -96,36 +99,34 @@ export function useMasterPassword() {
 }
 
 /**
- * Gets the private key for the account.
+ * The encryption key for AES to be used for encrypting the data stored
+ * on chain.
  */
-export function usePrivateKey() {
+type EncryptionKey = {
+  key: string;
+  iv: string;
+};
+
+/**
+ * Gets the encryption key for the account.
+ */
+export function useEncryptionKey() {
   const key = useEncryptionKeyForLocalStorage();
 
   return useAccountInner(
     useCallback(
       (state) => {
-        if (!key || !state.encPrivateKey) {
+        if (!key || !state.encEncryptionKey) {
           return null;
         }
-        const privateKey = AES.decrypt(state.encPrivateKey, key).toString(
+
+        const encKey = AES.decrypt(state.encEncryptionKey, key).toString(
           enc.Utf8
         );
-        return pki.privateKeyFromPem(privateKey);
+        return JSON.parse(encKey) as EncryptionKey;
       },
       [key]
     )
-  );
-}
-
-/**
- * Gets the public key for the account.
- */
-export function usePublicKey() {
-  const pKey = usePrivateKey();
-
-  return useMemo(
-    () => (pKey ? pki.publicKeyFromPem(pki.privateKeyToPem(pKey)) : null),
-    [pKey]
   );
 }
 
@@ -150,20 +151,23 @@ export function useSetMasterPassword() {
 }
 
 /**
- * Sets a new private key after encrypting it.
+ * Sets a new encryption key after encrypting it.
  */
-function useSetPrivateKey() {
+function useSetEncryptionKey() {
   const wallet = useWallet();
 
   return useCallback(
-    async (privateKey: string) => {
+    async (encKey: EncryptionKey) => {
       if (!wallet) {
         throw new Error('Wallet is not initialized.');
       }
 
       const key = await getEncryptionKeyForLocalStorage(wallet);
-      const encPrivateKey = AES.encrypt(privateKey, key).toString();
-      useAccountInner.setState({ encPrivateKey });
+      const encEncryptionKey = AES.encrypt(
+        JSON.stringify(encKey),
+        key
+      ).toString();
+      useAccountInner.setState({ encEncryptionKey });
     },
     [wallet]
   );
@@ -171,24 +175,26 @@ function useSetPrivateKey() {
 
 /**
  * Create a signatures for the account which can then be safely stored in the
- * chain. This is to verify if a private key is correct for the account.
+ * chain. This is to verify if an encryption key is correct for the account.
  */
 async function signAccountId(
   accountId: string,
-  privateKey: pki.rsa.PrivateKey
+  encKey: EncryptionKey
 ): Promise<string> {
-  const hash = md.sha512.create();
-  hash.update(accountId, 'utf8');
-  return privateKey.sign(hash);
+  const cipherText = cipher.createCipher('AES-CBC', encKey.key);
+  cipherText.start({ iv: encKey.iv });
+  cipherText.update(util.createBuffer(accountId));
+  cipherText.finish();
+  return cipherText.output.toHex();
 }
 
 /**
- * Initiates the account on the chain and produces a private key.
+ * Initiates the account on the chain and produces an encryption key.
  */
 export function useInitiateAccount() {
   const accountId = useAccountId();
   const contract = useContract();
-  const setPrivateKey = useSetPrivateKey();
+  const setEncKey = useSetEncryptionKey();
 
   return useCallback(async () => {
     if (!contract) {
@@ -212,30 +218,29 @@ export function useInitiateAccount() {
       throw new Error('Account is already initialized');
     }
 
-    const keyPair = await generateRSAKeyPair();
+    const encKey = generateKeyandIV();
 
-    const signature = await signAccountId(accountId!, keyPair.privateKey);
+    const signature = await signAccountId(accountId!, encKey);
     // Store the hash.
     await contract.initialize_account_signature({ signature });
 
-    // Store the encrypted private key locally.
-    const privateKeyPem = pki.privateKeyToPem(keyPair.privateKey);
-    await setPrivateKey(privateKeyPem);
+    // Store the encryption key locally.
+    await setEncKey(encKey);
 
-    return privateKeyPem;
-  }, [accountId, contract, setPrivateKey]);
+    return Buffer.from(JSON.stringify(encKey), 'utf8').toString('base64');
+  }, [accountId, contract, setEncKey]);
 }
 
 /**
- * Verify whether the given private key is correct.
+ * Verify whether the given encryption key is correct.
  */
 export function useVerifyAccount() {
   const accountId = useAccountId();
   const contract = useContract();
-  const setPrivateKey = useSetPrivateKey();
+  const setEncKey = useSetEncryptionKey();
 
   return useCallback(
-    async (privateKeyPem: string) => {
+    async (baseEncKey: string) => {
       if (!contract) {
         throw new Error('Wallet not initialized yet');
       }
@@ -245,16 +250,18 @@ export function useVerifyAccount() {
         account_id: accountId!,
       });
 
-      const privateKey = pki.privateKeyFromPem(privateKeyPem);
-      const hash = await signAccountId(accountId!, privateKey);
+      const encKey: EncryptionKey = JSON.parse(
+        Buffer.from(baseEncKey, 'base64').toString('utf8')
+      );
+      const hash = await signAccountId(accountId!, encKey);
 
       const isCorrect = hash === storedHash;
       if (isCorrect) {
-        await setPrivateKey(privateKeyPem);
+        await setEncKey(encKey);
       }
       return isCorrect;
     },
-    [accountId, contract, setPrivateKey]
+    [accountId, contract, setEncKey]
   );
 }
 
@@ -293,27 +300,20 @@ export function useGetAccountSignature() {
 }
 
 /**
- * Removes the master password and private key from the state and storage.
+ * Removes the master password and encryption key from the state and storage.
  * Used during logout.
  */
 export function useForgetAccount() {
   return useCallback(() => {
-    useAccountInner.setState({ encPassword: null, encPrivateKey: null });
+    useAccountInner.setState({ encPassword: null, encEncryptionKey: null });
   }, []);
 }
 
 /**
- * Generates an RSA Key Pair.
+ * Generates Key and IV for use in AES encryption.
  */
-async function generateRSAKeyPair(): Promise<pki.rsa.KeyPair> {
-  return new Promise((resolve, reject) => {
-    pki.rsa.generateKeyPair({ bits: 2048, workers: 2 }, (err, keyPair) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      resolve(keyPair);
-    });
-  });
+function generateKeyandIV(): EncryptionKey {
+  const key = random.getBytesSync(32);
+  const iv = random.getBytesSync(16);
+  return { key, iv };
 }

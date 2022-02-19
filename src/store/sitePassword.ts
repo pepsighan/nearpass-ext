@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useContract } from './wallet';
-import { useMasterPassword, usePrivateKey, usePublicKey } from './account';
+import { useMasterPassword, useEncryptionKey, usePublicKey } from './account';
 import { useQuery, useQueryClient } from 'react-query';
 import create from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -92,7 +92,7 @@ export function useAllSitePasswords() {
     }
   }, [contract, masterPassword]);
 
-  const privateKey = usePrivateKey();
+  const privateKey = useEncryptionKey();
   const data: SitePassword[] = useMemo(() => {
     if (!masterPassword || !privateKey) {
       return [];
