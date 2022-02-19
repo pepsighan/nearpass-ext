@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogTitle,
   TextField,
+  Typography,
 } from '@mui/material';
 import { materialRegister } from '../materialRegister';
 import { LoadingButton } from '@mui/lab';
@@ -33,7 +34,7 @@ const schema = z.object({
   ),
 });
 
-export default function AskMasterPassword() {
+export default function RestoreAccount() {
   const [{ value: hash, loading }] = useGetAccountHash();
   const isPasswordPresent = Boolean(useMasterPassword());
 
@@ -66,7 +67,7 @@ export default function AskMasterPassword() {
 
   return (
     <Dialog open={!loading && Boolean(hash) && !isPasswordPresent}>
-      <DialogTitle>Unlock Nearpass</DialogTitle>
+      <DialogTitle>Restore Nearpass</DialogTitle>
 
       <DialogContent>
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
@@ -79,6 +80,9 @@ export default function AskMasterPassword() {
             sx={{ mt: 2 }}
             {...materialRegister(register, 'masterPassword')}
           />
+          <Typography variant="body2" color="textSecondary" mt={1}>
+            Provide a new password for the account.
+          </Typography>
 
           <TextField
             label="Private key PEM"

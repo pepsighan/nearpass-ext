@@ -6,7 +6,7 @@ import Passwords from './Passwords';
 import Settings from './Settings';
 import { Box } from '@mui/material';
 import InitiateNewAccount from './InitiateNewAccount';
-import AskMasterPassword from './AskMasterPassword';
+import RestoreAccount from './RestoreAccount';
 import { Helmet } from 'react-helmet';
 
 export default function Dashboard() {
@@ -25,7 +25,7 @@ export default function Dashboard() {
         </Routes>
       </Box>
       <InitiateNewAccount />
-      <AskMasterPassword />
+      <RestoreAccount />
     </>
   );
 }
