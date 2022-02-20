@@ -1,5 +1,5 @@
 import { Stack, TextField, Typography } from '@mui/material';
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent, useCallback, useState } from 'react';
 import { useAsyncFn } from 'react-use';
 import { LoadingButton } from '@mui/lab';
 import { useTempSitePassword } from '../store/tempSitePassword';
@@ -29,8 +29,15 @@ export default function PopupSaveForm() {
         type: BackgroundMessage.RemovePopupBadge,
       });
     },
-    [addSitePassword, website, username, password]
+    [addSitePassword, website, username, password, forgetPassword, setSaved]
   );
+
+  const onDiscard = useCallback(() => {
+    forgetPassword();
+    chrome.runtime.sendMessage({
+      type: BackgroundMessage.RemovePopupBadge,
+    });
+  }, [forgetPassword]);
 
   return (
     <>
@@ -56,15 +63,34 @@ export default function PopupSaveForm() {
               size="small"
               disabled
             />
-            <LoadingButton variant="contained" type="submit" loading={loading}>
-              Save Password
-            </LoadingButton>
+            <Stack direction="row" spacing={2}>
+              <LoadingButton
+                variant="outlined"
+                color="error"
+                fullWidth
+                disabled={loading}
+                onClick={onDiscard}
+              >
+                Discard Password
+              </LoadingButton>
+
+              <LoadingButton
+                variant="contained"
+                type="submit"
+                fullWidth
+                loading={loading}
+              >
+                Save Password
+              </LoadingButton>
+            </Stack>
           </Stack>
         </>
       )}
 
       {saved && (
-        <Typography sx={{ bgcolor: 'primary.50', p: 2, borderRadius: 2, mt: 2 }}>
+        <Typography
+          sx={{ bgcolor: 'primary.50', p: 2, borderRadius: 2, mt: 2 }}
+        >
           Your password has been saved.
         </Typography>
       )}

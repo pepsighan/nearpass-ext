@@ -29,7 +29,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BaseStyles />
       <ThemeProvider theme={theme}>
-        <Box sx={{ pt: 2, pb: 2, px: 2, minWidth: 300 }}>
+        <Box sx={{ pt: 2, pb: 2, px: 2, minWidth: 340 }}>
           <Typography variant="h6" textAlign="center">
             Nearpass
           </Typography>
@@ -38,6 +38,7 @@ export default function App() {
 
           <Button
             variant={isForm ? 'outlined' : 'contained'}
+            color={isForm ? 'secondary' : 'primary'}
             fullWidth
             onClick={onOpenApp}
             sx={{ mt: 2 }}
