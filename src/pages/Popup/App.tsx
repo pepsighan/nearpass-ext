@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Box,
   Button,
@@ -10,13 +10,33 @@ import {
 import theme from '../../config/theme';
 import BaseStyles from '../../components/BaseStyles';
 import { useTempSitePassword } from '../../store/tempSitePassword';
+import { useAddSitePassword } from '../../store/sitePassword';
+import { BackgroundMessage } from '../../messages';
 
 export default function App() {
   const onOpenApp = useCallback(() => {
     window.open(chrome.runtime.getURL('app.html'));
   }, []);
 
-  const { website, username, password } = useTempSitePassword();
+  const [saved, setSaved] = useState(false);
+  const { website, username, password, forgetPassword } = useTempSitePassword();
+
+  const addSitePassword = useAddSitePassword();
+  const onSave = useCallback(async () => {
+    if (!website || !username || !password) {
+      return;
+    }
+
+    await addSitePassword({ website, username, password });
+
+    // Forget the password from store and remove the badge from the extension
+    // icon.
+    await forgetPassword();
+    setSaved(true);
+    chrome.runtime.sendMessage({
+      type: BackgroundMessage.RemovePopupBadge,
+    });
+  }, [addSitePassword, website, username, password]);
 
   return (
     <>
@@ -27,7 +47,7 @@ export default function App() {
             Nearpass
           </Typography>
 
-          {website && (
+          {!saved && website && (
             <>
               <Typography
                 variant="body2"
@@ -58,11 +78,17 @@ export default function App() {
                   size="small"
                   disabled
                 />
-                <Button variant="contained" type="submit">
+                <Button variant="contained" type="submit" onClick={onSave}>
                   Save Password
                 </Button>
               </Stack>
             </>
+          )}
+
+          {saved && (
+            <Typography sx={{ bgcolor: 'primary.50', p: 2, borderRadius: 2 }}>
+              Your password has been saved.
+            </Typography>
           )}
 
           <Button
