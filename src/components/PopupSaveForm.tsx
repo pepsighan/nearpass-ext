@@ -64,7 +64,7 @@ export default function PopupSaveForm() {
       )}
 
       {saved && (
-        <Typography sx={{ bgcolor: 'primary.50', p: 2, borderRadius: 2 }}>
+        <Typography sx={{ bgcolor: 'primary.50', p: 2, borderRadius: 2, mt: 2 }}>
           Your password has been saved.
         </Typography>
       )}

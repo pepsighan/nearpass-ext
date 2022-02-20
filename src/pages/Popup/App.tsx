@@ -5,6 +5,7 @@ import theme from '../../config/theme';
 import BaseStyles from '../../components/BaseStyles';
 import { useTempSitePassword } from '../../store/tempSitePassword';
 import PopupSaveForm from '../../components/PopupSaveForm';
+import { useInitializeWallet } from '../../store/wallet';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,6 +16,8 @@ const queryClient = new QueryClient({
 });
 
 export default function App() {
+  useInitializeWallet();
+
   const onOpenApp = useCallback(() => {
     window.open(chrome.runtime.getURL('app.html'));
   }, []);
