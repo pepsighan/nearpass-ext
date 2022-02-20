@@ -68,6 +68,13 @@ export default function PasswordSaveDetection() {
       });
     };
 
+    // TODO: There are some login forms which do not raise `submit` event.
+    // They transition by clicking a non-submit button. Need to find a way
+    // to capture that event correctly.
+
+    // TODO: Should figure out a way to find whether a credential is a valid
+    // one for login. Right now, the app does not care if a submitted
+    // credential is a valid one or not. The user is prompted to save it or not.
     form.addEventListener('submit', onSubmit);
     return () => {
       form.removeEventListener('submit', onSubmit);
