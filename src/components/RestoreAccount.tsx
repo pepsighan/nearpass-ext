@@ -8,9 +8,11 @@ import { useForm } from 'react-hook-form';
 import React, { useCallback } from 'react';
 import {
   Box,
+  Button,
   Dialog,
   DialogContent,
   DialogTitle,
+  Stack,
   TextField,
   Typography,
 } from '@mui/material';
@@ -18,6 +20,7 @@ import { materialRegister } from '../materialRegister';
 import { LoadingButton } from '@mui/lab';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useLogout } from '../store/wallet';
 
 const schema = z.object({
   masterPassword: z.string().min(8),
@@ -55,6 +58,8 @@ export default function RestoreAccount() {
     [verifyAccount]
   );
 
+  const logout = useLogout();
+
   return (
     <Dialog open={!loading && Boolean(signature) && !isPasswordPresent}>
       <DialogTitle>Restore Nearpass</DialogTitle>
@@ -91,16 +96,21 @@ export default function RestoreAccount() {
             won&apos;t be able to recover your data.
           </Typography>
 
-          <LoadingButton
-            type="submit"
-            variant="contained"
-            fullWidth
-            size="large"
-            loading={isSubmitting}
-            sx={{ mt: 2 }}
-          >
-            Restore
-          </LoadingButton>
+          <Stack direction="row" mt={2} spacing={2}>
+            <Button variant="outlined" fullWidth onClick={logout}>
+              Logout
+            </Button>
+
+            <LoadingButton
+              type="submit"
+              variant="contained"
+              fullWidth
+              size="large"
+              loading={isSubmitting}
+            >
+              Restore
+            </LoadingButton>
+          </Stack>
         </Box>
       </DialogContent>
     </Dialog>
