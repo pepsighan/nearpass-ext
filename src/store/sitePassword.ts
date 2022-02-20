@@ -23,7 +23,7 @@ export function useAddSitePassword() {
   const query = useQueryClient();
 
   return useCallback(
-    async (payload: SitePassword) => {
+    async (payload: Omit<SitePassword, 'id'>) => {
       if (!contract) {
         throw new Error('Wallet is not initialized yet');
       }

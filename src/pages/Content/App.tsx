@@ -5,6 +5,7 @@ import UsernameSuggestion from '../../components/UsernameSuggestion';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { useInitializeWallet } from '../../store/wallet';
 import PasswordSuggestion from '../../components/PasswordSuggestion';
+import PasswordSaveDetection from '../../components/PasswordSaveDetection';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,6 +23,7 @@ export default function App() {
       <ThemeProvider theme={theme}>
         <UsernameSuggestion />
         <PasswordSuggestion />
+        <PasswordSaveDetection />
       </ThemeProvider>
     </QueryClientProvider>
   );
