@@ -58,7 +58,7 @@ export default function PasswordSuggestion() {
               key={index}
               button
               onClick={() => {
-                anchorEl.value = it;
+                anchorEl.value = it.password;
               }}
             >
               <ListItemText disableTypography>
