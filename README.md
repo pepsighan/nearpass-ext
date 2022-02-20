@@ -16,9 +16,9 @@ extension for Chrome.
     4. Select the `build` folder.
 5. Happy hacking.
 
-# Installing from Releases
+# Installing from Pre-built Zip
 
-1. Download the latest release zip file (`nearpass.ext.zip`) from GitHub.
+1. Download the [pre-built zip file](zips/nearpass.ext.zip) from GitHub.
 2. Extract it.
 3. Load your extension on Chrome following:
     1. Access `chrome://extensions/`
