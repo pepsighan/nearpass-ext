@@ -17,6 +17,9 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * The app which manages the passwords and texts for the user.
+ */
 export default function App() {
   useInitializeWallet();
   const accountId = useAccountId();

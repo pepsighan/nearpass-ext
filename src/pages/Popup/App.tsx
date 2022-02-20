@@ -15,6 +15,10 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * The popup which is a gateway to access the app and also a portal where
+ * user can save their credentials after logging in.
+ */
 export default function App() {
   useInitializeWallet();
 

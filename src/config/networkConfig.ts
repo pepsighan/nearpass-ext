@@ -2,7 +2,7 @@ import config from './config';
 import { ConnectConfig } from 'near-api-js';
 
 export default function networkConfig(): ConnectConfig {
-  switch (config.NODE_ENV) {
+  switch (config.APP_ENV) {
     case 'production':
     case 'mainnet':
       return {
@@ -23,7 +23,7 @@ export default function networkConfig(): ConnectConfig {
       };
     default:
       throw Error(
-        `Unconfigured environment '${config.NODE_ENV}'. Can be configured in src/config.js.`
+        `Unconfigured environment '${config.APP_ENV}'. Can be configured in src/config.js.`
       );
   }
 }

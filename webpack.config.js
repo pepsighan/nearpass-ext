@@ -96,11 +96,7 @@ const options = {
     new CleanWebpackPlugin({ verbose: false }),
     new webpack.ProgressPlugin(),
     // expose and write the allowed env vars on the compiled bundle
-    new webpack.EnvironmentPlugin([
-      'NODE_ENV',
-      'CONTRACT_NAME',
-      'NEAR_NO_LOGS',
-    ]),
+    new webpack.EnvironmentPlugin(['APP_ENV', 'CONTRACT_NAME', 'NEAR_NO_LOGS']),
     new CopyWebpackPlugin({
       patterns: [
         {
