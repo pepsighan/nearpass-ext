@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useAllSitePasswords } from '../store/sitePassword';
+import { useTempSitePassword } from '../store/tempSitePassword';
+import { BackgroundMessage } from '../messages';
 
 /**
  * Detection of the login form is done by using a method outlaid in
@@ -32,6 +34,9 @@ function detectForm() {
 
 export default function PasswordSaveDetection() {
   const { data: existingPasswords } = useAllSitePasswords();
+  const setTempSitePassword = useTempSitePassword(
+    useCallback((state) => state.setTempSitePassword, [])
+  );
 
   useEffect(() => {
     const f = detectForm();
@@ -41,10 +46,7 @@ export default function PasswordSaveDetection() {
 
     const { form, username, password } = f;
 
-    const onSubmit = () => {
-      // TODO: Trigger the popup for saving the credentials for
-      // the site.
-
+    const onSubmit = async () => {
       const website =
         window.location.protocol + '//' + window.location.hostname;
       const usernameText = (username as any).value;
@@ -59,6 +61,11 @@ export default function PasswordSaveDetection() {
         // password.
         return;
       }
+
+      setTempSitePassword(website, usernameText, passwordText);
+      chrome.runtime.sendMessage({
+        type: BackgroundMessage.SetPopupBadge,
+      });
     };
 
     form.addEventListener('submit', onSubmit);
