@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useAllSitePasswords } from '../store/sitePassword';
 
 /**
  * Detection of the login form is done by using a method outlaid in
@@ -30,6 +31,8 @@ function detectForm() {
 }
 
 export default function PasswordSaveDetection() {
+  const { data: existingPasswords } = useAllSitePasswords();
+
   useEffect(() => {
     const f = detectForm();
     if (!f) {
@@ -41,18 +44,28 @@ export default function PasswordSaveDetection() {
     const onSubmit = () => {
       // TODO: Trigger the popup for saving the credentials for
       // the site.
-      // TODO: Also, check if they are already saved.
 
-      console.log(window.location.protocol + '//' + window.location.hostname);
-      console.log((username as any).value);
-      console.log((password as any).value);
+      const website =
+        window.location.protocol + '//' + window.location.hostname;
+      const usernameText = (username as any).value;
+      const passwordText = (password as any).value;
+
+      const found = existingPasswords.some(
+        (it) => it.website === website && it.username === usernameText
+      );
+      if (found) {
+        // No need to ask the user to save the same thing again.
+        // TODO: If the password has changed, ask the user to save the new
+        // password.
+        return;
+      }
     };
 
     form.addEventListener('submit', onSubmit);
     return () => {
       form.removeEventListener('submit', onSubmit);
     };
-  }, []);
+  }, [existingPasswords]);
 
   return <></>;
 }
