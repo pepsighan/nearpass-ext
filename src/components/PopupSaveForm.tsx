@@ -1,5 +1,7 @@
-import { Button, Stack, TextField, Typography } from '@mui/material';
-import React, { useCallback, useState } from 'react';
+import { Stack, TextField, Typography } from '@mui/material';
+import React, { FormEvent, useState } from 'react';
+import { useAsyncFn } from 'react-use';
+import { LoadingButton } from '@mui/lab';
 import { useTempSitePassword } from '../store/tempSitePassword';
 import { useAddSitePassword } from '../store/sitePassword';
 import { BackgroundMessage } from '../messages';
@@ -9,21 +11,26 @@ export default function PopupSaveForm() {
   const { website, username, password, forgetPassword } = useTempSitePassword();
 
   const addSitePassword = useAddSitePassword();
-  const onSave = useCallback(async () => {
-    if (!website || !username || !password) {
-      return;
-    }
+  const [{ loading }, onSave] = useAsyncFn(
+    async (ev: FormEvent) => {
+      ev.preventDefault();
 
-    await addSitePassword({ website, username, password });
+      if (!website || !username || !password) {
+        return;
+      }
 
-    // Forget the password from store and remove the badge from the extension
-    // icon.
-    await forgetPassword();
-    setSaved(true);
-    chrome.runtime.sendMessage({
-      type: BackgroundMessage.RemovePopupBadge,
-    });
-  }, [addSitePassword, website, username, password]);
+      await addSitePassword({ website, username, password });
+
+      // Forget the password from store and remove the badge from the extension
+      // icon.
+      await forgetPassword();
+      setSaved(true);
+      chrome.runtime.sendMessage({
+        type: BackgroundMessage.RemovePopupBadge,
+      });
+    },
+    [addSitePassword, website, username, password]
+  );
 
   return (
     <>
@@ -34,7 +41,7 @@ export default function PopupSaveForm() {
             Nearpass?
           </Typography>
 
-          <Stack component="form" spacing={2} sx={{ mt: 3 }}>
+          <Stack component="form" spacing={2} sx={{ mt: 3 }} onSubmit={onSave}>
             <TextField label="Website" value={website} size="small" disabled />
             <TextField
               label="Username"
@@ -49,9 +56,9 @@ export default function PopupSaveForm() {
               size="small"
               disabled
             />
-            <Button variant="contained" type="submit" onClick={onSave}>
+            <LoadingButton variant="contained" type="submit" loading={loading}>
               Save Password
-            </Button>
+            </LoadingButton>
           </Stack>
         </>
       )}
