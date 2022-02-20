@@ -28,23 +28,48 @@ export default function App() {
           </Typography>
 
           {website && (
-            <Stack spacing={1}>
-              <TextField label="Website" value={website} disabled />
-              <TextField label="Username" value={username} disabled />
-              <TextField
-                label="Password"
-                type="password"
-                value={password}
-                disabled
-              />
-            </Stack>
+            <>
+              <Typography
+                variant="body2"
+                textAlign="center"
+                color="textSecondary"
+              >
+                You just logged in with the following credentials. Save them on
+                Nearpass?
+              </Typography>
+
+              <Stack component="form" spacing={2} sx={{ mt: 3 }}>
+                <TextField
+                  label="Website"
+                  value={website}
+                  size="small"
+                  disabled
+                />
+                <TextField
+                  label="Username"
+                  value={username}
+                  size="small"
+                  disabled
+                />
+                <TextField
+                  label="Password"
+                  type="password"
+                  value={password}
+                  size="small"
+                  disabled
+                />
+                <Button variant="contained" type="submit">
+                  Save Password
+                </Button>
+              </Stack>
+            </>
           )}
 
           <Button
             variant={website ? 'outlined' : 'contained'}
             fullWidth
             onClick={onOpenApp}
-            sx={{ mt: 1 }}
+            sx={{ mt: 2 }}
           >
             View Manager
           </Button>
