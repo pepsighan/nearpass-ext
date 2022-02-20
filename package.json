@@ -1,6 +1,6 @@
 {
   "name": "nearpass-ext",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Open-source, decentralized and private password manager built on Near Protocol.",
   "license": "GPL-3.0",
   "scripts": {
