@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  Stack,
   TextField,
   Typography,
 } from '@mui/material';
@@ -21,6 +22,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MdRemoveRedEye } from 'react-icons/md';
 import { useBoolean, useCopyToClipboard } from 'react-use';
+import { useLogout } from '../store/wallet';
 
 const schema = z
   .object({
@@ -69,9 +71,15 @@ export default function InitiateNewAccount() {
     [setEncKey, refetch]
   );
 
+  const logout = useLogout();
+
   return (
     <>
-      <Dialog open={!loading && !Boolean(accountSignature)}>
+      <Dialog
+        open={!loading && !Boolean(accountSignature)}
+        fullWidth
+        maxWidth="xs"
+      >
         <DialogTitle>Set Master Password</DialogTitle>
 
         <DialogContent>
@@ -99,16 +107,21 @@ export default function InitiateNewAccount() {
               {...materialRegister(register, 'repeatPassword')}
             />
 
-            <LoadingButton
-              type="submit"
-              variant="contained"
-              fullWidth
-              size="large"
-              loading={isSubmitting}
-              sx={{ mt: 2 }}
-            >
-              Save Password
-            </LoadingButton>
+            <Stack direction="row" spacing={2} mt={2}>
+              <Button variant="outlined" color="error" fullWidth onClick={logout}>
+                Logout
+              </Button>
+
+              <LoadingButton
+                type="submit"
+                variant="contained"
+                fullWidth
+                size="large"
+                loading={isSubmitting}
+              >
+                Save Password
+              </LoadingButton>
+            </Stack>
           </Box>
         </DialogContent>
       </Dialog>

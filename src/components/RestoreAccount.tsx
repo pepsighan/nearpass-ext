@@ -97,7 +97,7 @@ export default function RestoreAccount() {
           </Typography>
 
           <Stack direction="row" mt={2} spacing={2}>
-            <Button variant="outlined" fullWidth onClick={logout}>
+            <Button variant="outlined" color="error" fullWidth onClick={logout}>
               Logout
             </Button>
 
