@@ -15,6 +15,11 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * Content script which does the following two tasks at the moment:
+ * 1. Username and password suggestion during logins.
+ * 2. When logging in, suggests the user to save their credentials.
+ */
 export default function App() {
   useInitializeWallet();
 
