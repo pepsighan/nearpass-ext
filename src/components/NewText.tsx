@@ -66,7 +66,7 @@ export default function NewText() {
         <DialogContent>
           <Stack component="form" spacing={2} onSubmit={handleSubmit(onSubmit)}>
             <Typography color="textSecondary">
-              Fill in the form with the credentials for a website. All of this
+              Fill in the form with any secret you want to store. All of this
               information is going to be stored after encrypting it by your
               encryption key.
             </Typography>
