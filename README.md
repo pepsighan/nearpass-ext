@@ -1,7 +1,7 @@
 # Nearpass Web Extension
 
 Open-source, decentralized and private password manager built on Near Protocol. This repo contains code for the web
-extension for Chrome.
+extension for Chrome. If you are looking for the smart contract for this dapp, visit [nearpass repo](https://github.com/pepsighan/nearpass).
 
 ## Installing and Running
 
